@@ -1,0 +1,7 @@
+[package]
+name = "tricycle"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+paste = "1.0.15"
