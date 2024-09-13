@@ -2,7 +2,7 @@ pub mod visitor;
 
 use crate::{lexer::Token, shared::Span};
 
-pub struct Program {
+pub struct File {
     pub items: Vec<Item>,
 }
 
@@ -69,8 +69,8 @@ pub enum Stmt {
 }
 
 pub enum Expr {
-    Call(CallExpr),
-    Binary(BinaryExpr),
+    Call(ExprCall),
+    Binary(ExprBin),
 }
 
 pub struct Local {
@@ -96,8 +96,8 @@ pub struct Local {
     pub span: Span,
 }
 
-pub enum CallExpr {
-    CallFn(CallFn),
+pub enum ExprCall {
+    Fn(CallFn),
 }
 
 pub struct CallFn {
@@ -114,7 +114,7 @@ pub struct CallFn {
     pub span: Span,
 }
 
-pub struct BinaryExpr {
+pub struct ExprBin {
     /// The left hand side of this expression.
     pub lhs: Box<Expr>,
 
