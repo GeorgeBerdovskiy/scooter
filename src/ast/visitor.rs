@@ -24,7 +24,7 @@ macro_rules! visitor {
 
 // Generate the visitor trait.
 visitor! {
-    program: File,
+    file: File,
     item: Item,
     item_fn: ItemFn,
     ident: Ident,
@@ -38,7 +38,7 @@ visitor! {
     call_fn: CallFn
 }
 
-pub fn visit_program<'a>(visitor: &mut impl Visit<'a>, program: &'a File) {
+pub fn visit_file<'a>(visitor: &mut impl Visit<'a>, program: &'a File) {
     for item in &program.items {
         visitor.visit_item(item)
     }

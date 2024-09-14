@@ -34,11 +34,24 @@ impl Instr {
             Instr::Call(call) => &call.da,
         }
     }
+
+    /// Set the label of this instruction.
+    pub fn set_label(&mut self, label: Label) {
+        match self {
+            Instr::Binary(bin) => bin.label = Some(label),
+            Instr::Unary(un) => un.label = Some(label),
+            Instr::Copy(cop) => cop.label = Some(label),
+            Instr::Call(call) => call.label = Some(label),
+        }
+    }
 }
 
 /// Represents an instruction of the form `<name|temp> = <addr> <op> <addr>`.
 #[derive(Clone)]
 pub struct BinInstr {
+    /// The optional label.
+    pub label: Option<Label>,
+
     /// The destination address, which absolutely **cannot** be a constant.
     pub da: Addr,
 
@@ -55,13 +68,22 @@ pub struct BinInstr {
 impl BinInstr {
     /// Create a new binary instruction.
     pub fn new(da: Addr, la: Addr, op: Op, ra: Addr) -> Self {
-        BinInstr { da, la, op, ra }
+        BinInstr {
+            label: None,
+            da,
+            la,
+            op,
+            ra,
+        }
     }
 }
 
 /// Represents an instruction of the form `<name|temp> = <op> <addr>`.
 #[derive(Clone)]
 pub struct UnInstr {
+    /// The optional label.
+    pub label: Option<Label>,
+
     /// The destination address, which absolutely **cannot** be a constant.
     pub da: Addr,
 
@@ -82,6 +104,9 @@ pub enum Op {
 /// Represents an instruction of the form `<name|temp> = <addr>`.
 #[derive(Clone)]
 pub struct CopyInstr {
+    /// The optional label.
+    pub label: Option<Label>,
+
     /// The destination address, which absolutely **cannot** be a constant.
     pub da: Addr,
 
@@ -91,13 +116,20 @@ pub struct CopyInstr {
 
 impl CopyInstr {
     pub fn new(da: Addr, ad: Addr) -> Self {
-        CopyInstr { da, ad }
+        CopyInstr {
+            label: None,
+            da,
+            ad,
+        }
     }
 }
 
 /// Represents an instruction of the form `da = fl, n`
 #[derive(Clone)]
 pub struct CallInstr {
+    /// The optional label.
+    pub label: Option<Label>,
+
     /// The destination address, which absolutely **cannot** be a constant.
     pub da: Addr,
 
@@ -110,6 +142,11 @@ pub struct CallInstr {
 
 impl CallInstr {
     pub fn new(da: Addr, fl: Label, n: u32) -> Self {
-        CallInstr { da, fl, n }
+        CallInstr {
+            label: None,
+            da,
+            fl,
+            n,
+        }
     }
 }

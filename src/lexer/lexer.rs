@@ -32,6 +32,17 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
+    /// Create a new lexer instance.
+    pub fn new(source: &'a [char]) -> Self {
+        Lexer {
+            source,
+            index: 0,
+            line: 1,
+            column: 1,
+            eof: Token::unspanned(TokenKind::EOF),
+        }
+    }
+
     /// Lex the entire input.
     pub fn lex(&mut self) -> LexResult<Vec<Token>> {
         let mut tokens = Vec::new();
@@ -62,7 +73,7 @@ impl<'a> Lexer<'a> {
         if current.is_alphabetic() || current == '_' {
             let start = self.location();
             let mut end = self.location();
-            let mut raw = String::new();
+            let mut raw = String::from(self.current());
 
             self.step(1);
 
@@ -74,12 +85,12 @@ impl<'a> Lexer<'a> {
 
             match raw.as_str() {
                 "fn" => Ok(Token::spanned(TokenKind::KwFn, Span::new(start, end))),
-                _ => Ok(Token::spanned(TokenKind::Ident, Span::new(start, end))),
+                _ => Ok(Token::spanned(TokenKind::Ident(raw), Span::new(start, end))),
             }
         } else if current.is_numeric() {
             let start = self.location();
             let mut end = self.location();
-            let mut raw = String::new();
+            let mut raw = String::from(self.current());
 
             self.step(1);
 
@@ -94,7 +105,10 @@ impl<'a> Lexer<'a> {
                 span: Some(Span::new(start.clone(), end.clone())),
             })?;
 
-            Ok(Token::spanned(TokenKind::LitNum, Span::new(start, end)))
+            Ok(Token::spanned(
+                TokenKind::LitNum(value),
+                Span::new(start, end),
+            ))
         } else {
             // Must be a symbol of some kind
             let start = Location::new(self.line, self.column);
@@ -125,12 +139,12 @@ impl<'a> Lexer<'a> {
 
                 '{' => {
                     self.expect('{')?;
-                    kind = TokenKind::LParen;
+                    kind = TokenKind::LBrace;
                 }
 
                 '}' => {
                     self.expect('}')?;
-                    kind = TokenKind::RParen;
+                    kind = TokenKind::RBrace;
                 }
 
                 ':' => {
@@ -156,6 +170,7 @@ impl<'a> Lexer<'a> {
                     let current = self.current();
                     if current == '>' {
                         self.expect('>')?;
+                        kind = TokenKind::RArrow
                     } else {
                         return Err(Self::unexpected(current, Span::new(start, end)));
                     }

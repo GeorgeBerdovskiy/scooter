@@ -1,7 +1,7 @@
 use crate::shared::Span;
 
 /// Represents a token.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Token {
     /// The kind of this token.
     pub kind: TokenKind,
@@ -26,18 +26,21 @@ impl Token {
 }
 
 /// Represents a token kind.
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
-    KwFn,      // "fn"
-    Ident,     // "foo", "bar", "baz"
-    LitNum,    // "123", "0", "5555"
-    Plus,      // +
-    Minus,     // -
-    Star,      // *
-    Equal,     // =
-    Colon,     // :
-    Semicolon, // ;
-    LParen,    // (
-    RParen,    // )
+    KwFn,          // "fn"
+    Ident(String), // "foo", "bar", "baz"
+    LitNum(i32),   // "123", "0", "5555"
+    Plus,          // +
+    Minus,         // -
+    Star,          // *
+    Equal,         // =
+    Colon,         // :
+    Semicolon,     // ;
+    LParen,        // (
+    RParen,        // )
+    LBrace,        // {
+    RBrace,        // }
+    RArrow,        // ->
     EOF,
 }

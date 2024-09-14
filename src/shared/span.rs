@@ -1,5 +1,5 @@
 /// Indicates the start and end locations of a construct in the source code.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Span {
     /// Starting location of this construct.
     pub start: Location,
@@ -24,7 +24,7 @@ impl Span {
 }
 
 /// Represents a location in the source code.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Location {
     /// Line of this location (starting at one).
     pub line: usize,
