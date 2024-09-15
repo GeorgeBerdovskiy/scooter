@@ -1,7 +1,5 @@
 <div align="center">
-  <picture>
-    <img src="documentation/images/ScooterLight.png" style="width: 250px; max-width: 100%"/>
-  </picture>
+  <img src="documentation/images/ScooterLight.png" style="width: 250px; max-width: 100%"/>
 </div>
 
 ## What is Scooter?
