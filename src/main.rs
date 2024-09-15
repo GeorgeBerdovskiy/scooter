@@ -19,7 +19,7 @@ use lexer::Lexer;
 use parser::Parser;
 use utilities::error;
 
-/// The Tricycle compiler.
+/// The Scooter compiler.
 #[derive(ClapParser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {

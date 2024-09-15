@@ -7,16 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'tricycle'",
+            "name": "Debug executable 'scooter'",
             "cargo": {
                 "args": [
                     "build",
                     "--profile=dev",
-                    "--bin=tricycle",
-                    "--package=tricycle"
+                    "--bin=scooter",
+                    "--package=scooter"
                 ],
                 "filter": {
-                    "name": "tricycle",
+                    "name": "scooter",
                     "kind": "bin"
                 }
             },
@@ -26,16 +26,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'tricycle'",
+            "name": "Debug unit tests in executable 'scooter'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=tricycle",
-                    "--package=tricycle"
+                    "--bin=scooter",
+                    "--package=scooter"
                 ],
                 "filter": {
-                    "name": "tricycle",
+                    "name": "scooter",
                     "kind": "bin"
                 }
             },
