@@ -5,7 +5,7 @@ use crate::ast::{
 use crate::lexer::{Token, TokenKind};
 use crate::shared::Span;
 
-/// Represents an error that occured during parsing].
+/// Represents an error that occured during parsing.
 pub struct ParseError {
     /// The cause of this error.
     pub reason: String,

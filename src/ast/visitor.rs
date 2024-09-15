@@ -9,15 +9,11 @@ use super::{
 /// This macro generates the `Visitor` trait. Unfortunately, you still have to manually implement each `visit_*` function
 /// that exists outside of the trait, but it still saves some time.
 macro_rules! visitor {
-    // This pattern matches multiple `(ident) Type` pairs in the macro input.
     ( $( $arg:ident : $ty:ident),* ) => {
-        // This trait can be used to visit the AST in a specific way. All the analyzers and generators use this trait.
         pub trait Visit<'a>: Sized {
             $(
                 paste! {
-                    // For each pair, generate a visit method in the trait.
                     fn [<visit_ $arg>] (&mut self, $arg: &'a $ty) {
-                        // Call the corresponding visit function.
                         concat_idents!(visit_, $arg) (self, $arg);
                     }
                 }

@@ -18,7 +18,7 @@ pub enum Container {
 }
 
 #[allow(non_camel_case_types)]
-pub struct RISCV<'a> {
+pub struct RISC_V<'a> {
     /// The file we are writing to.
     file: File,
 
@@ -44,7 +44,7 @@ pub struct RISCV<'a> {
     offset: Integer,
 }
 
-impl<'a> Lower for RISCV<'a> {
+impl<'a> Lower for RISC_V<'a> {
     fn lower(&mut self) -> io::Result<()> {
         for instr in self.instrs {
             self.lower_instr(instr)?;
@@ -54,7 +54,7 @@ impl<'a> Lower for RISCV<'a> {
     }
 }
 
-impl<'a> RISCV<'a> {
+impl<'a> RISC_V<'a> {
     fn lower_instr(&mut self, instr: &Instr) -> io::Result<()> {
         match instr {
             Instr::Binary(bin_instr) => self.lower_bin_instr(bin_instr)?,

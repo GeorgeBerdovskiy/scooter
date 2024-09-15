@@ -5,11 +5,14 @@ mod ast;
 mod ir;
 mod lexer;
 mod parser;
+mod sema;
 mod shared;
 mod utilities;
 
 use clap::Parser as ClapParser;
 use ir::LoweringEngine;
+use sema::check_main::CheckMain;
+use sema::SemaEngine;
 
 use std::fs;
 use std::path::PathBuf;
@@ -60,6 +63,13 @@ fn main() {
             exit(1);
         }
     };
+
+    // Before lowering, we should run several semantic analyses
+    let mut sema = SemaEngine::new(&ast).register(Box::new(CheckMain::new()));
+
+    if let Err(err) = sema.run() {
+        error(err.reason, &source, err.span)
+    }
 
     // Next, we'll lower the AST to IR and generate a human readable IR file
     let mut lower = LoweringEngine::new(&ast);

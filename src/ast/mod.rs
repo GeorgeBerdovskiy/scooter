@@ -54,6 +54,13 @@ pub struct ParamList {
     pub span: Span,
 }
 
+impl ParamList {
+    /// Returns the length of the internal list of parameters.
+    pub fn len(&self) -> usize {
+        self.params.len()
+    }
+}
+
 /// Represents a function parameter.
 #[derive(Debug)]
 pub struct Param {
@@ -67,7 +74,7 @@ pub struct Param {
     pub ty: Ty,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ident {
     /// The raw string representation of this identifier.
     pub repr: String,
