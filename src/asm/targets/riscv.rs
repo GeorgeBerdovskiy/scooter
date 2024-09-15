@@ -6,7 +6,7 @@ use std::io;
 
 use crate::asm::lower::Lower;
 use crate::asm::register::RegMgr;
-use crate::intermediate::{BinInstr, Instr};
+use crate::ir::{BinInstr, Instr};
 use crate::shared::{Index, Map};
 
 type Integer = isize;

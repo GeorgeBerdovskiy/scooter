@@ -29,6 +29,7 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// Create a new parser.
     pub fn new(input: &'a [Token]) -> Self {
         Parser {
             input,
@@ -101,6 +102,7 @@ impl<'a> Parser<'a> {
         }))
     }
 
+    /// Parse an identifier.
     pub fn parse_ident(&mut self) -> ParseResult<Ident> {
         let current = self.current().clone();
 
@@ -153,6 +155,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a return statement.
     fn parse_return(&mut self) -> ParseResult<Return> {
         self.start();
 
@@ -178,6 +181,7 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// Parse an expression (`expr ::= term { "+" term }`).
     pub fn parse_expr(&mut self) -> ParseResult<Expr> {
         let mut expr = self.parse_term()?;
 
@@ -203,6 +207,7 @@ impl<'a> Parser<'a> {
         Ok(expr)
     }
 
+    /// Parse a term (`term ::= factor { "*" factor }`).
     pub fn parse_term(&mut self) -> ParseResult<Expr> {
         let mut expr = self.parse_factor()?;
 
@@ -228,6 +233,7 @@ impl<'a> Parser<'a> {
         Ok(expr)
     }
 
+    /// Parse a factor (`factor ::= lit-num | ident | call-fn | "(" expr ")"`).
     fn parse_factor(&mut self) -> ParseResult<Expr> {
         self.start();
         let current = self.current().clone();
@@ -246,13 +252,10 @@ impl<'a> Parser<'a> {
                 let ident = self.parse_ident()?;
 
                 if self.current_kind() == &TokenKind::LParen {
-                    let lp = self.expect(TokenKind::LParen)?.clone();
-                    let rp = self.expect(TokenKind::RParen)?.clone();
-
                     Ok(Expr::Call(ExprCall::Fn(CallFn {
                         ident,
-                        lp,
-                        rp,
+                        lp: self.expect(TokenKind::LParen)?.clone(),
+                        rp: self.expect(TokenKind::RParen)?.clone(),
                         span: self.end(),
                     })))
                 } else {

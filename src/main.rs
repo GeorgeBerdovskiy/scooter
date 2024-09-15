@@ -2,14 +2,14 @@
 
 mod asm;
 mod ast;
-mod intermediate;
+mod ir;
 mod lexer;
 mod parser;
 mod shared;
 mod utilities;
 
 use clap::Parser as ClapParser;
-use intermediate::LoweringEngine;
+use ir::LoweringEngine;
 
 use std::fs;
 use std::path::PathBuf;

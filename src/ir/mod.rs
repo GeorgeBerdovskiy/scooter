@@ -1,19 +1,25 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Write};
 
-use super::instructions::{Addr, Instr, Label, Op};
-use super::Index;
+use crate::shared::Index;
+
+pub mod instr;
+pub mod lower;
+mod mapper;
+mod table;
+
+pub use instr::*;
+pub use lower::*;
 
 /// The IR representation of a program. Really just a fancy list of instructions right now. Later it will likely
 /// become much more complicated!
-pub struct IRRoot {
+pub struct IRRoot<'a> {
     pub last_label: Index,
-    pub i_to_num: HashMap<Index, i32>,
+    pub interner: LoweringPool<'a>,
     pub instrs: Vec<Instr>,
 }
 
-impl IRRoot {
+impl IRRoot<'_> {
     pub fn human_readable(&self, output: &str) -> io::Result<()> {
         let mut file = File::create(output)?;
 
@@ -61,7 +67,10 @@ impl IRRoot {
         match ad {
             Addr::Name(i) => format!("x{i}"),
             Addr::Temp(i) => format!("t{i}"),
-            Addr::Const(i) if !is_d => format!("{}", self.i_to_num[i]),
+            Addr::Const(i) if !is_d => {
+                let value = self.interner.integers.value_of(*i).cloned().unwrap();
+                value.to_string()
+            }
             _ => panic!("Constant cannot serve as a destination address"),
         }
     }

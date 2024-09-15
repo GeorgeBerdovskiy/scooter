@@ -3,6 +3,7 @@ use std::process::exit;
 
 use crate::shared::Span;
 
+/// Print an error to the command line.
 pub fn error<S: AsRef<str>>(msg: S, source: &str, span: Option<Span>) {
     println!("{} | {}\n", "ERROR".red().bold(), msg.as_ref());
 

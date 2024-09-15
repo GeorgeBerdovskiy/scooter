@@ -1,21 +1,36 @@
-use std::collections::HashMap;
+use crate::ast::visitor::*;
+use crate::ast::*;
+use crate::ir::instr::*;
+use crate::shared::{Index, Pool};
 
-use ir::IRRoot;
-use mapper::Mapper;
+use super::mapper::Mapper;
+use super::IRRoot;
 
-use crate::{
-    ast::{visitor::Visit, Expr, ExprCall, ExprLit, File, OpKind, Stmt},
-    shared::Index,
-};
+/// Groups pools for various literals into one central pool.
+#[derive(Clone)]
+#[allow(dead_code)]
+pub struct LoweringPool<'a> {
+    /// The integer interner.
+    pub integers: Pool<i32>,
 
-pub mod instructions;
-pub mod ir;
-mod mapper;
-mod table;
+    /// The boolean interner.
+    pub booleans: Pool<bool>,
 
-pub use instructions::*;
+    /// The string interner.
+    pub strings: Pool<&'a str>,
+}
 
-/// Generates IR code given the AST for an entire program.
+impl LoweringPool<'_> {
+    pub fn new() -> Self {
+        LoweringPool {
+            integers: Pool::new(),
+            booleans: Pool::new(),
+            strings: Pool::new(),
+        }
+    }
+}
+
+/// Lowers an abstract syntax tree for an entire program to the Wheel intermediate representation.
 pub struct LoweringEngine<'a> {
     /// The source abstract syntax tree.
     ast: &'a File,
@@ -29,14 +44,8 @@ pub struct LoweringEngine<'a> {
     /// Map from functions to their labels.
     fn_map: Mapper<'a>,
 
-    /// Map from literal numbers to their indices.
-    num_to_i: HashMap<i32, Index>,
-
-    /// Reverse literal map.
-    i_to_num: HashMap<Index, i32>,
-
-    /// The next available literal number index.
-    next_num: Index,
+    /// The lowering interner.
+    interner: LoweringPool<'a>,
 
     /// The next available temporary address.
     next_temp: Index,
@@ -50,9 +59,7 @@ impl<'a> LoweringEngine<'a> {
             instrs: Vec::new(),
             name_map: Mapper::new(),
             fn_map: Mapper::new(),
-            num_to_i: HashMap::new(),
-            i_to_num: HashMap::new(),
-            next_num: 0,
+            interner: LoweringPool::new(),
             next_temp: 0,
         }
     }
@@ -63,7 +70,7 @@ impl<'a> LoweringEngine<'a> {
 
         IRRoot {
             last_label: self.fn_map.next - 1,
-            i_to_num: self.i_to_num.clone(),
+            interner: self.interner.clone(),
             instrs: self.instrs.clone(),
         }
     }
@@ -118,15 +125,7 @@ impl<'a> LoweringEngine<'a> {
 
             Expr::Lit(expr_lit) => match expr_lit {
                 ExprLit::Num(lit_num) => {
-                    let index = if self.num_to_i.contains_key(&lit_num.value) {
-                        self.num_to_i[&lit_num.value]
-                    } else {
-                        let index = self.next_num;
-                        self.num_to_i.insert(lit_num.value, index);
-                        self.i_to_num.insert(index, lit_num.value);
-                        self.next_num += 1;
-                        index
-                    };
+                    let index = self.interner.integers.insert(lit_num.value);
 
                     let da = Addr::Temp(self.temp());
                     let ad = Addr::Const(index);

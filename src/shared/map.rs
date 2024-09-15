@@ -3,6 +3,7 @@
 use std::{collections::HashMap, hash::Hash};
 
 /// Generic bidirectional map used throughout the compiler.
+#[derive(Clone)]
 pub struct Map<F: Eq + Hash, T: Eq + Hash> {
     forward: HashMap<F, T>,
     reverse: HashMap<T, F>,
@@ -21,11 +22,11 @@ impl<F: Clone + Eq + Hash, T: Clone + Eq + Hash> Map<F, T> {
         self.reverse.insert(to, from);
     }
 
-    pub fn from(&mut self, from: &F) -> Option<&T> {
+    pub fn from(&self, from: &F) -> Option<&T> {
         self.forward.get(from)
     }
 
-    pub fn to(&mut self, to: &T) -> Option<&F> {
+    pub fn to(&self, to: &T) -> Option<&F> {
         self.reverse.get(to)
     }
 
