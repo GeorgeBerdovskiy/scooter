@@ -63,7 +63,7 @@ fn main() {
 
     // Next, we'll lower the AST to IR and generate a human readable IR file
     let mut lower = LoweringEngine::new(&ast);
-    let ir = lower.generate();
+    let ir = lower.lower();
 
     let _ = ir.human_readable("./out.ir");
 }

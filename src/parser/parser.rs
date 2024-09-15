@@ -1,6 +1,6 @@
 use crate::ast::{
-    BinaryOp, Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Item, ItemFn, LitNum,
-    Local, OpKind, Return, Stmt, Ty,
+    ArgList, BinaryOp, Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Item, ItemFn,
+    LitNum, Local, OpKind, Param, ParamList, Return, Stmt, Ty,
 };
 use crate::lexer::{Token, TokenKind};
 use crate::shared::Span;
@@ -73,33 +73,46 @@ impl<'a> Parser<'a> {
         // Start a new span
         self.start();
 
-        // Consume the `fn` token
-        let kw = self.expect(TokenKind::KwFn)?.clone();
-
-        // Read the identifier
-        let ident = self.parse_ident()?;
-
-        // Read the parameters
-        let lp = self.expect(TokenKind::LParen)?.clone();
-        let rp = self.expect(TokenKind::RParen)?.clone();
-
-        // Read the return type
-        let arrow = self.expect(TokenKind::RArrow)?.clone();
-        let ty = self.parse_ty()?;
-
-        // Read the brackets and function body
-        let body = self.parse_block()?;
-
         Ok(Item::Fn(ItemFn {
-            kw,
-            ident,
-            lp,
-            rp,
-            arrow,
-            ty,
-            body,
+            kw: self.expect(TokenKind::KwFn)?,
+            ident: self.parse_ident()?,
+            lp: self.expect(TokenKind::LParen)?,
+            params: self.parse_param_list()?,
+            rp: self.expect(TokenKind::RParen)?,
+            arrow: self.expect(TokenKind::RArrow)?,
+            ty: self.parse_ty()?,
+            body: self.parse_block()?,
             span: self.end(),
         }))
+    }
+
+    /// Parse a list of function parameters.
+    fn parse_param_list(&mut self) -> ParseResult<ParamList> {
+        self.start();
+        let mut params = Vec::new();
+
+        while self.current_kind() != &TokenKind::RParen {
+            params.push(self.parse_param()?);
+
+            if self.current_kind() != &TokenKind::RParen {
+                // Since we haven't reached the closing parenthesis yet, we expect a comma
+                self.expect(TokenKind::Comma)?;
+            }
+        }
+
+        Ok(ParamList {
+            params,
+            span: self.end(),
+        })
+    }
+
+    /// Parse a single function parameter.
+    fn parse_param(&mut self) -> ParseResult<Param> {
+        Ok(Param {
+            ident: self.parse_ident()?,
+            colon: self.expect(TokenKind::Colon)?,
+            ty: self.parse_ty()?,
+        })
     }
 
     /// Parse an identifier.
@@ -126,7 +139,7 @@ impl<'a> Parser<'a> {
         self.start();
 
         // Get the left curly brace
-        let lc = self.expect(TokenKind::LBrace)?.clone();
+        let lc = self.expect(TokenKind::LBrace)?;
 
         // Collect the statements
         let mut stmts = Vec::new();
@@ -136,7 +149,7 @@ impl<'a> Parser<'a> {
         }
 
         // Get the right curly brace
-        let rc = self.expect(TokenKind::RBrace)?.clone();
+        let rc = self.expect(TokenKind::RBrace)?;
 
         Ok(Block { lc, stmts, rc })
     }
@@ -160,7 +173,7 @@ impl<'a> Parser<'a> {
         self.start();
 
         Ok(Return {
-            kw: self.expect(TokenKind::KwRet)?.clone(),
+            kw: self.expect(TokenKind::KwRet)?,
             expr: self.parse_expr()?,
             span: self.end(),
         })
@@ -171,11 +184,11 @@ impl<'a> Parser<'a> {
         self.start();
 
         Ok(Local {
-            kw: self.expect(TokenKind::KwLet)?.clone(),
+            kw: self.expect(TokenKind::KwLet)?,
             ident: self.parse_ident()?,
-            colon: self.expect(TokenKind::Colon)?.clone(),
+            colon: self.expect(TokenKind::Colon)?,
             ty: self.parse_ty()?,
-            eq: self.expect(TokenKind::Equal)?.clone(),
+            eq: self.expect(TokenKind::Equal)?,
             expr: self.parse_expr()?,
             span: self.end(),
         })
@@ -254,8 +267,9 @@ impl<'a> Parser<'a> {
                 if self.current_kind() == &TokenKind::LParen {
                     Ok(Expr::Call(ExprCall::Fn(CallFn {
                         ident,
-                        lp: self.expect(TokenKind::LParen)?.clone(),
-                        rp: self.expect(TokenKind::RParen)?.clone(),
+                        lp: self.expect(TokenKind::LParen)?,
+                        args: self.parse_arg_list()?,
+                        rp: self.expect(TokenKind::RParen)?,
                         span: self.end(),
                     })))
                 } else {
@@ -274,6 +288,24 @@ impl<'a> Parser<'a> {
                 span: Some(self.end()),
             }),
         }
+    }
+
+    fn parse_arg_list(&mut self) -> ParseResult<ArgList> {
+        self.start();
+        let mut args = Vec::new();
+
+        while self.current_kind() != &TokenKind::RParen {
+            args.push(self.parse_expr()?);
+
+            if self.current_kind() != &TokenKind::RParen {
+                self.expect(TokenKind::Comma)?;
+            }
+        }
+
+        Ok(ArgList {
+            args,
+            span: self.end(),
+        })
     }
 
     /// Parse a type.
@@ -321,10 +353,10 @@ impl<'a> Parser<'a> {
     }
 
     /// Return the current token if its kind matches `kind`, or an error otherwise.
-    fn expect(&mut self, kind: TokenKind) -> ParseResult<&Token> {
+    fn expect(&mut self, kind: TokenKind) -> ParseResult<Token> {
         if self.current_kind() == &kind {
             self.advance(1);
-            return Ok(self.current());
+            return Ok(self.current().clone());
         }
 
         Err(ParseError {

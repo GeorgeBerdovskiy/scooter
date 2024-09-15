@@ -20,7 +20,9 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": [
+                "-s=examples/main.scoot"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {

@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use paste::paste;
 
 use super::{

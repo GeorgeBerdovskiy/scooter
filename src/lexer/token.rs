@@ -39,6 +39,7 @@ pub enum TokenKind {
     RParen,        // )
     LBrace,        // {
     RBrace,        // }
+    Comma,         // ,
     RArrow,        // ->
     EOF,
 }
@@ -60,6 +61,7 @@ impl Display for TokenKind {
             Self::RParen => write!(f, "')'"),
             Self::LBrace => write!(f, "'{{'"),
             Self::RBrace => write!(f, "'}}'"),
+            Self::Comma => write!(f, "','"),
             Self::RArrow => write!(f, "'->'"),
             Self::EOF => write!(f, "<EOF>"),
         }

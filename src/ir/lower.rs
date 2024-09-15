@@ -66,7 +66,7 @@ impl<'a> LoweringEngine<'a> {
     }
 
     /// Generate IR for the provided AST.
-    pub fn generate(&mut self) -> IRRoot {
+    pub fn lower(&mut self) -> IRRoot {
         self.visit_file(self.ast);
 
         IRRoot {
@@ -104,12 +104,16 @@ impl<'a> LoweringEngine<'a> {
 
             Expr::Call(expr_call) => match expr_call {
                 ExprCall::Fn(expr_call_fn) => {
+                    // First, we need to add a parameter instruction for every argument passed to this function
+                    self.process_args(&expr_call_fn.args);
+
                     let ident = &expr_call_fn.ident.repr;
 
                     let da = Addr::Temp(self.temp());
                     let fl = Label(self.fn_map.find(ident));
 
-                    self.instrs.push(Instr::Call(CallInstr::new(da, fl, 0)));
+                    self.instrs
+                        .push(Instr::Call(CallInstr::new(da, fl, expr_call_fn.args.len())));
                     self.instrs.len() - 1
                 }
             },
@@ -139,6 +143,20 @@ impl<'a> LoweringEngine<'a> {
                     self.instrs.len() - 1
                 }
             },
+        }
+    }
+
+    fn process_args(&mut self, args: &'a ArgList) {
+        for arg in &args.args {
+            // Generate an instruction for the expression, getting its index
+            let i = self.process_expr(&arg);
+
+            // Get the destination address of this expression
+            let ad = self.instrs[i].da().clone();
+
+            // Use the destination address in the parameter instruction
+            self.instrs
+                .push(Instr::Param(ParamInstr { label: None, ad }))
         }
     }
 
@@ -181,8 +199,7 @@ impl<'a> Visit<'a> for LoweringEngine<'a> {
     fn visit_item_fn(&mut self, item_fn: &'a crate::ast::ItemFn) {
         let ident = &item_fn.ident.repr;
 
-        // Move the mappers up a level
-        self.fn_map.up();
+        // Move the name mapper up a level
         self.name_map.up();
 
         // Conver the function name into a label
@@ -197,8 +214,7 @@ impl<'a> Visit<'a> for LoweringEngine<'a> {
         // Add the function label to the first instruction of the body
         self.instrs.get_mut(index).unwrap().set_label(Label(label));
 
-        // Move the mappers down a level
-        self.fn_map.down();
+        // Move the name mapper down a level
         self.name_map.down();
     }
 }

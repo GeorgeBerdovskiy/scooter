@@ -1,5 +1,5 @@
+#![allow(dead_code)]
 pub mod visitor;
-
 use crate::{lexer::Token, shared::Span};
 
 #[derive(Debug)]
@@ -13,6 +13,7 @@ pub enum Item {
     Fn(ItemFn),
 }
 
+/// Represents a function item (declaration).
 #[derive(Debug)]
 pub struct ItemFn {
     /// The `fn` keyword.
@@ -23,6 +24,9 @@ pub struct ItemFn {
 
     /// The left parenthesis.
     pub lp: Token,
+
+    /// The function parameters
+    pub params: ParamList,
 
     /// The right parenthesis.
     pub rp: Token,
@@ -38,6 +42,29 @@ pub struct ItemFn {
 
     /// The function span.
     pub span: Span,
+}
+
+/// Represents a list of function parameters.
+#[derive(Debug)]
+pub struct ParamList {
+    /// List of parameters
+    pub params: Vec<Param>,
+
+    /// Span of the entire puncuated list.
+    pub span: Span,
+}
+
+/// Represents a function parameter.
+#[derive(Debug)]
+pub struct Param {
+    /// The parameter identifier.
+    pub ident: Ident,
+
+    /// The `:` symbol.
+    pub colon: Token,
+
+    /// The parameter type.
+    pub ty: Ty,
 }
 
 #[derive(Debug)]
@@ -173,11 +200,31 @@ pub struct CallFn {
     /// The left parenthesis.
     pub lp: Token,
 
+    /// The list of arguments.
+    pub args: ArgList,
+
     /// The right parenthesis.
     pub rp: Token,
 
     /// The span of the entire function call.
     pub span: Span,
+}
+
+/// Represents a list of function arguments.
+#[derive(Debug)]
+pub struct ArgList {
+    /// the list of arguments.
+    pub args: Vec<Expr>,
+
+    /// The span of the entire argument list.
+    pub span: Span,
+}
+
+impl ArgList {
+    /// Returns the length of the internal list of arguments.
+    pub fn len(&self) -> usize {
+        self.args.len()
+    }
 }
 
 #[derive(Debug)]

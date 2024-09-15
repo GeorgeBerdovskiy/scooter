@@ -20,6 +20,7 @@ pub enum Instr {
     Binary(BinInstr),
     Unary(UnInstr),
     Copy(CopyInstr),
+    Param(ParamInstr),
     Call(CallInstr),
     Return(RetInstr),
 }
@@ -32,7 +33,8 @@ impl Instr {
             Instr::Unary(un) => &un.da,
             Instr::Copy(cop) => &cop.da,
             Instr::Call(call) => &call.da,
-            Instr::Return(_) => panic!("Return statements don't have a destination address!"),
+            Instr::Param(_) => panic!("Parameter instructions don't have a destination address!"),
+            Instr::Return(_) => panic!("Return instructions don't have a destination address!"),
         }
     }
 
@@ -43,9 +45,20 @@ impl Instr {
             Instr::Unary(un) => un.label = Some(label),
             Instr::Copy(cop) => cop.label = Some(label),
             Instr::Call(call) => call.label = Some(label),
+            Instr::Param(param) => param.label = Some(label),
             Instr::Return(ret) => ret.label = Some(label),
         }
     }
+}
+
+/// Represents an instruction of the form `param <addr>`
+#[derive(Clone)]
+pub struct ParamInstr {
+    /// The (optional) label.
+    pub label: Option<Label>,
+
+    // The address.
+    pub ad: Addr,
 }
 
 /// Represents an instruction of the form `<name|temp> = <addr> <op> <addr>`.
@@ -157,11 +170,11 @@ pub struct CallInstr {
     pub fl: Label,
 
     /// The number of parameters.
-    pub n: u32,
+    pub n: usize,
 }
 
 impl CallInstr {
-    pub fn new(da: Addr, fl: Label, n: u32) -> Self {
+    pub fn new(da: Addr, fl: Label, n: usize) -> Self {
         CallInstr {
             label: None,
             da,

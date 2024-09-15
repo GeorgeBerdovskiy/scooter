@@ -161,6 +161,11 @@ impl<'a> Lexer<'a> {
                     kind = TokenKind::Equal;
                 }
 
+                ',' => {
+                    self.expect(',')?;
+                    kind = TokenKind::Comma
+                }
+
                 // Single character lookahead (we need to look at the next one)
                 '-' => {
                     self.expect('-')?;

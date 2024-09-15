@@ -1,28 +1,34 @@
 
 ```
-program ::= item-fn { item-fn }
+  program ::= item-fn { item-fn }
 
-item-fn ::= "fn" ident "(" ")" -> ty "{" block "}"
+  item-fn ::= "fn" ident "(" fn-params ")" -> ty block
 
-     ty ::= "i32"
+fn-params ::= { fn-param "," }
 
-  block ::= stmt ";" { stmt ";" }
+ fn-param ::= ident ":" ty
 
-  stmt  ::= local | expr
+       ty ::= "i32"
 
-   expr ::= call-fn | term { "+" term }
+    block ::= "{" stmt ";" { stmt ";" } "}"
 
-  local ::= "let" ident ":" ty "=" expr
+    stmt  ::= local | expr
 
-call-fn ::= ident "(" ")"
+     expr ::= call-fn | term { "+" term }
 
-   term ::= factor { "*" factor }
+    local ::= "let" ident ":" ty "=" expr
 
- factor ::= ident | lit-int | "(" expr ")"
+  call-fn ::= ident "(" args ")"
 
-  ident ::= (letter | "_") { letter | digit }
+     args ::= { expr "," }
 
- letter ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z"
+     term ::= factor { "*" factor }
 
-  digit ::= "0" | "1" | "2" | ... | "9"
+   factor ::= ident | lit-int | "(" expr ")"
+
+    ident ::= (letter | "_") { letter | digit }
+
+   letter ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z"
+
+    digit ::= "0" | "1" | "2" | ... | "9"
 ```
