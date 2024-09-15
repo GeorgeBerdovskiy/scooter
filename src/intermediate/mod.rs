@@ -1,20 +1,19 @@
-use instructions::{Addr, BinInstr, CallInstr, CopyInstr, Instr, Label, Op};
+use std::collections::HashMap;
+
+use ir::IRRoot;
 use mapper::Mapper;
 
-use crate::ast::{visitor::Visit, Expr, ExprCall, File, OpKind, Stmt};
+use crate::{
+    ast::{visitor::Visit, Expr, ExprCall, ExprLit, File, OpKind, Stmt},
+    shared::Index,
+};
 
-mod instructions;
+pub mod instructions;
+pub mod ir;
 mod mapper;
 mod table;
 
-/// Represents the index of an instruction in the list of instructions.
-type Index = usize;
-
-/// The IR representation of a program. Really just a fancy list of instructions right now. Later it will likely
-/// become much more complicated!
-pub struct IRRoot {
-    pub instrs: Vec<Instr>,
-}
+pub use instructions::*;
 
 /// Generates IR code given the AST for an entire program.
 pub struct LoweringEngine<'a> {
@@ -30,6 +29,15 @@ pub struct LoweringEngine<'a> {
     /// Map from functions to their labels.
     fn_map: Mapper<'a>,
 
+    /// Map from literal numbers to their indices.
+    num_to_i: HashMap<i32, Index>,
+
+    /// Reverse literal map.
+    i_to_num: HashMap<Index, i32>,
+
+    /// The next available literal number index.
+    next_num: Index,
+
     /// The next available temporary address.
     next_temp: Index,
 }
@@ -42,6 +50,9 @@ impl<'a> LoweringEngine<'a> {
             instrs: Vec::new(),
             name_map: Mapper::new(),
             fn_map: Mapper::new(),
+            num_to_i: HashMap::new(),
+            i_to_num: HashMap::new(),
+            next_num: 0,
             next_temp: 0,
         }
     }
@@ -51,6 +62,8 @@ impl<'a> LoweringEngine<'a> {
         self.visit_file(&self.ast);
 
         IRRoot {
+            last_label: self.fn_map.next - 1,
+            i_to_num: self.i_to_num.clone(),
             instrs: self.instrs.clone(),
         }
     }
@@ -92,6 +105,40 @@ impl<'a> LoweringEngine<'a> {
                     self.instrs.len() - 1
                 }
             },
+
+            Expr::Ident(ident) => {
+                let index = self.name_map.find(&ident.repr);
+
+                let da = Addr::Temp(self.temp());
+                let ad = Addr::Name(index);
+
+                self.instrs.push(Instr::Copy(CopyInstr::new(da, ad)));
+                self.instrs.len() - 1
+            }
+
+            Expr::Lit(expr_lit) => match expr_lit {
+                ExprLit::Num(lit_num) => {
+                    let index = if self.num_to_i.contains_key(&lit_num.value) {
+                        self.num_to_i[&lit_num.value]
+                    } else {
+                        let index = self.next_num;
+                        self.num_to_i.insert(lit_num.value, index);
+                        self.i_to_num.insert(index, lit_num.value);
+                        self.next_num += 1;
+                        index
+                    };
+
+                    let da = Addr::Temp(self.temp());
+                    let ad = Addr::Const(index);
+
+                    self.instrs.push(Instr::Copy(CopyInstr {
+                        label: None,
+                        da,
+                        ad,
+                    }));
+                    self.instrs.len() - 1
+                }
+            },
         }
     }
 
@@ -105,13 +152,13 @@ impl<'a> LoweringEngine<'a> {
 
 impl<'a> Visit<'a> for LoweringEngine<'a> {
     fn visit_stmt(&mut self, stmt: &'a crate::ast::Stmt) {
-        let (ad, da) = match stmt {
+        match stmt {
             Stmt::Local(local) => {
                 let i = self.process_expr(&local.expr);
                 let ad = self.instrs[i].da().clone();
 
                 let da = Addr::Name(self.name_map.insert(&local.ident.repr));
-                (da, ad)
+                self.instrs.push(Instr::Copy(CopyInstr::new(da, ad)));
             }
 
             Stmt::Expr(expr) => {
@@ -119,11 +166,16 @@ impl<'a> Visit<'a> for LoweringEngine<'a> {
                 let ad = self.instrs[i].da().clone();
 
                 let da = Addr::Temp(self.temp());
-                (da, ad)
+                self.instrs.push(Instr::Copy(CopyInstr::new(da, ad)));
+            }
+
+            Stmt::Return(ret) => {
+                let i = self.process_expr(&ret.expr);
+                let ad = self.instrs[i].da().clone();
+
+                self.instrs.push(Instr::Return(RetInstr::new(ad)));
             }
         };
-
-        self.instrs.push(Instr::Copy(CopyInstr::new(da, ad)));
     }
 
     fn visit_item_fn(&mut self, item_fn: &'a crate::ast::ItemFn) {

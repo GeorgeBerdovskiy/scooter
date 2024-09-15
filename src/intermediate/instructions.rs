@@ -1,5 +1,3 @@
-use std::{ops::Add, rc::Rc};
-
 use super::Index;
 
 /// Represents a label, which identifies the start of a chunk of code. Labels are used for many purposes,
@@ -17,11 +15,13 @@ pub enum Addr {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub enum Instr {
     Binary(BinInstr),
     Unary(UnInstr),
     Copy(CopyInstr),
     Call(CallInstr),
+    Return(RetInstr),
 }
 
 impl Instr {
@@ -32,6 +32,7 @@ impl Instr {
             Instr::Unary(un) => &un.da,
             Instr::Copy(cop) => &cop.da,
             Instr::Call(call) => &call.da,
+            Instr::Return(_) => panic!("Return statements don't have a destination address!"),
         }
     }
 
@@ -42,6 +43,7 @@ impl Instr {
             Instr::Unary(un) => un.label = Some(label),
             Instr::Copy(cop) => cop.label = Some(label),
             Instr::Call(call) => call.label = Some(label),
+            Instr::Return(ret) => ret.label = Some(label),
         }
     }
 }
@@ -80,6 +82,7 @@ impl BinInstr {
 
 /// Represents an instruction of the form `<name|temp> = <op> <addr>`.
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct UnInstr {
     /// The optional label.
     pub label: Option<Label>,
@@ -124,8 +127,25 @@ impl CopyInstr {
     }
 }
 
+/// Represents an instruction of the form `ret ad`
+#[derive(Clone)]
+pub struct RetInstr {
+    /// The optional label.
+    pub label: Option<Label>,
+
+    /// The address being returned.
+    pub ad: Addr,
+}
+
+impl RetInstr {
+    pub fn new(ad: Addr) -> Self {
+        RetInstr { label: None, ad }
+    }
+}
+
 /// Represents an instruction of the form `da = fl, n`
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct CallInstr {
     /// The optional label.
     pub label: Option<Label>,

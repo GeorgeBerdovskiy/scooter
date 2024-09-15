@@ -2,14 +2,18 @@ pub mod visitor;
 
 use crate::{lexer::Token, shared::Span};
 
+#[derive(Debug)]
 pub struct File {
     pub items: Vec<Item>,
+    pub span: Span,
 }
 
+#[derive(Debug)]
 pub enum Item {
     Fn(ItemFn),
 }
 
+#[derive(Debug)]
 pub struct ItemFn {
     /// The `fn` keyword.
     pub kw: Token,
@@ -36,6 +40,7 @@ pub struct ItemFn {
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub struct Ident {
     /// The raw string representation of this identifier.
     pub repr: String,
@@ -44,14 +49,16 @@ pub struct Ident {
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub struct Ty {
     /// The raw string representation of this type.
-    pub repr: String,
+    pub ident: Ident,
 
     /// The type span.
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub struct Block {
     /// The left curly brace.
     pub lc: Token,
@@ -63,16 +70,65 @@ pub struct Block {
     pub rc: Token,
 }
 
+#[derive(Debug)]
 pub enum Stmt {
     Local(Local),
     Expr(Expr),
+    Return(Return),
 }
 
+#[derive(Debug)]
+pub struct Return {
+    /// The `return` keyword.
+    pub kw: Token,
+
+    /// The expression being returned.
+    pub expr: Expr,
+
+    /// The span of the entire return statement.
+    pub span: Span,
+}
+
+#[derive(Debug)]
 pub enum Expr {
     Call(ExprCall),
     Binary(ExprBin),
+    Lit(ExprLit),
+    Ident(Ident),
 }
 
+impl Expr {
+    pub fn span(&self) -> &Span {
+        match self {
+            Self::Call(expr_call) => expr_call.span(),
+            Self::Binary(expr_bin) => &expr_bin.span,
+            Self::Lit(expr_lit) => expr_lit.span(),
+            Self::Ident(ident) => &ident.span,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ExprLit {
+    Num(LitNum),
+}
+
+impl ExprLit {
+    pub fn span(&self) -> &Span {
+        match self {
+            Self::Num(lit_num) => &lit_num.span,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct LitNum {
+    pub value: i32,
+
+    pub span: Span,
+}
+
+#[derive(Debug)]
 pub struct Local {
     /// The `let` keyword.
     pub kw: Token,
@@ -81,7 +137,7 @@ pub struct Local {
     pub ident: Ident,
 
     /// The semicolon following the identifier.
-    pub semi: Token,
+    pub colon: Token,
 
     /// The type of this variable.
     pub ty: Ty,
@@ -96,10 +152,20 @@ pub struct Local {
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub enum ExprCall {
     Fn(CallFn),
 }
 
+impl ExprCall {
+    pub fn span(&self) -> &Span {
+        match self {
+            Self::Fn(call_fn) => &call_fn.span,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct CallFn {
     /// The name of the function being called.
     pub ident: Ident,
@@ -114,6 +180,7 @@ pub struct CallFn {
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub struct ExprBin {
     /// The left hand side of this expression.
     pub lhs: Box<Expr>,
@@ -128,6 +195,7 @@ pub struct ExprBin {
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub struct BinaryOp {
     /// The kind of operator.
     pub kind: OpKind,
@@ -136,6 +204,7 @@ pub struct BinaryOp {
     pub span: Span,
 }
 
+#[derive(Debug)]
 pub enum OpKind {
     Add,      // +
     Multiply, // *

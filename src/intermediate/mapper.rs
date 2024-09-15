@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::{table::SymbolTable, Index};
 
 pub struct Mapper<'a> {
@@ -7,7 +5,7 @@ pub struct Mapper<'a> {
     table: SymbolTable<'a, Index>,
 
     /// Next available index.
-    next: Index,
+    pub next: Index,
 }
 
 impl<'a> Mapper<'a> {

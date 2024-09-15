@@ -6,6 +6,7 @@ pub struct SymbolTable<'a, T: Clone> {
     pub symbols: HashMap<&'a str, T>,
 }
 
+#[allow(dead_code)]
 impl<'a, T: Clone> SymbolTable<'a, T> {
     pub fn new() -> Self {
         SymbolTable {

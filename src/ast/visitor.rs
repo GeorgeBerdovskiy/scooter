@@ -1,6 +1,9 @@
 use paste::paste;
 
-use super::{Block, CallFn, Expr, ExprBin, ExprCall, File, Ident, Item, ItemFn, Local, Stmt, Ty};
+use super::{
+    Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Item, ItemFn, LitNum, Local,
+    Return, Stmt, Ty,
+};
 
 /// This macro generates the `Visitor` trait. Unfortunately, you still have to manually implement each `visit_*` function
 /// that exists outside of the trait, but it still saves some time.
@@ -35,7 +38,10 @@ visitor! {
     ty: Ty,
     expr_bin: ExprBin,
     expr_call: ExprCall,
-    call_fn: CallFn
+    expr_lit: ExprLit,
+    call_fn: CallFn,
+    lit_num: LitNum,
+    ret: Return
 }
 
 pub fn visit_file<'a>(visitor: &mut impl Visit<'a>, program: &'a File) {
@@ -69,6 +75,7 @@ pub fn visit_stmt<'a>(visitor: &mut impl Visit<'a>, stmt: &'a Stmt) {
     match stmt {
         Stmt::Local(local) => visitor.visit_local(local),
         Stmt::Expr(expr) => visitor.visit_expr(expr),
+        Stmt::Return(ret) => visitor.visit_ret(ret),
     }
 }
 
@@ -82,6 +89,8 @@ pub fn visit_expr<'a>(visitor: &mut impl Visit<'a>, expr: &'a Expr) {
     match expr {
         Expr::Binary(expr_bin) => visitor.visit_expr_bin(expr_bin),
         Expr::Call(expr_call) => visitor.visit_expr_call(expr_call),
+        Expr::Lit(expr_lit) => visitor.visit_expr_lit(expr_lit),
+        Expr::Ident(ident) => visitor.visit_ident(ident),
     }
 }
 
@@ -100,6 +109,20 @@ pub fn visit_expr_call<'a>(visitor: &mut impl Visit<'a>, expr_call: &'a ExprCall
     }
 }
 
+pub fn visit_expr_lit<'a>(visitor: &mut impl Visit<'a>, expr_lit: &'a ExprLit) {
+    match expr_lit {
+        ExprLit::Num(lit_num) => visitor.visit_lit_num(lit_num),
+    }
+}
+
 pub fn visit_call_fn<'a>(visitor: &mut impl Visit<'a>, call_fn: &'a CallFn) {
     visitor.visit_ident(&call_fn.ident);
+}
+
+pub fn visit_lit_num<'a>(visitor: &mut impl Visit<'a>, lit_num: &'a LitNum) {
+    // Nothing to do here
+}
+
+pub fn visit_ret<'a>(visitor: &mut impl Visit<'a>, ret: &'a Return) {
+    visitor.visit_expr(&ret.expr);
 }

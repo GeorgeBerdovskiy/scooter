@@ -26,9 +26,6 @@ pub struct Lexer<'a> {
 
     /// Our current column (starting at one).
     column: usize,
-
-    /// The EOF token.
-    eof: Token,
 }
 
 impl<'a> Lexer<'a> {
@@ -39,7 +36,6 @@ impl<'a> Lexer<'a> {
             index: 0,
             line: 1,
             column: 1,
-            eof: Token::unspanned(TokenKind::EOF),
         }
     }
 
@@ -83,9 +79,12 @@ impl<'a> Lexer<'a> {
                 self.step(1);
             }
 
+            let span = Span::new(start, end);
             match raw.as_str() {
-                "fn" => Ok(Token::spanned(TokenKind::KwFn, Span::new(start, end))),
-                _ => Ok(Token::spanned(TokenKind::Ident(raw), Span::new(start, end))),
+                "fn" => Ok(Token::spanned(TokenKind::KwFn, span)),
+                "let" => Ok(Token::spanned(TokenKind::KwLet, span)),
+                "return" => Ok(Token::spanned(TokenKind::KwRet, span)),
+                _ => Ok(Token::spanned(TokenKind::Ident(raw), span)),
             }
         } else if current.is_numeric() {
             let start = self.location();
@@ -113,7 +112,7 @@ impl<'a> Lexer<'a> {
             // Must be a symbol of some kind
             let start = Location::new(self.line, self.column);
             let mut end: Location = Location::new(self.line, self.column);
-            let mut kind = TokenKind::EOF;
+            let kind;
 
             match current {
                 // No lookahead (this character is enough)
