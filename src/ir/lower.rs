@@ -21,6 +21,7 @@ pub struct LoweringPool<'a> {
 }
 
 impl LoweringPool<'_> {
+    /// Create an empty lowering pool.
     pub fn new() -> Self {
         LoweringPool {
             integers: Pool::new(),
@@ -44,8 +45,8 @@ pub struct LoweringEngine<'a> {
     /// Map from functions to their labels.
     fn_map: Mapper<'a>,
 
-    /// The lowering interner.
-    interner: LoweringPool<'a>,
+    /// The lowering pool.
+    pool: LoweringPool<'a>,
 
     /// The next available temporary address.
     next_temp: Index,
@@ -59,18 +60,18 @@ impl<'a> LoweringEngine<'a> {
             instrs: Vec::new(),
             name_map: Mapper::new(),
             fn_map: Mapper::new(),
-            interner: LoweringPool::new(),
+            pool: LoweringPool::new(),
             next_temp: 0,
         }
     }
 
     /// Generate IR for the provided AST.
     pub fn generate(&mut self) -> IRRoot {
-        self.visit_file(&self.ast);
+        self.visit_file(self.ast);
 
         IRRoot {
             last_label: self.fn_map.next - 1,
-            interner: self.interner.clone(),
+            interner: self.pool.clone(),
             instrs: self.instrs.clone(),
         }
     }
@@ -125,7 +126,7 @@ impl<'a> LoweringEngine<'a> {
 
             Expr::Lit(expr_lit) => match expr_lit {
                 ExprLit::Num(lit_num) => {
-                    let index = self.interner.integers.insert(lit_num.value);
+                    let index = self.pool.integers.insert(lit_num.value);
 
                     let da = Addr::Temp(self.temp());
                     let ad = Addr::Const(index);
@@ -185,7 +186,7 @@ impl<'a> Visit<'a> for LoweringEngine<'a> {
         self.name_map.up();
 
         // Conver the function name into a label
-        let label = self.fn_map.insert(&ident);
+        let label = self.fn_map.insert(ident);
 
         // Take note of the next available instruction index
         let index = self.instrs.len();

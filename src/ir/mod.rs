@@ -83,7 +83,7 @@ fn op_readable(op: &Op) -> String {
     }
 }
 
-fn label(label: &Option<Label>, max_len: usize, default: &String) -> String {
+fn label(label: &Option<Label>, max_len: usize, default: &str) -> String {
     match label {
         Some(label) => {
             let l = format!("L{}:", label.0);
@@ -91,6 +91,6 @@ fn label(label: &Option<Label>, max_len: usize, default: &String) -> String {
             format!("{l}{}", " ".repeat(space))
         }
 
-        None => default.clone(),
+        None => default.to_owned(),
     }
 }

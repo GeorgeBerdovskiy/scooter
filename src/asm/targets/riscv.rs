@@ -58,7 +58,7 @@ impl<'a> RISCV<'a> {
     fn lower_instr(&mut self, instr: &Instr) -> io::Result<()> {
         match instr {
             Instr::Binary(bin_instr) => self.lower_bin_instr(bin_instr)?,
-            _ => {}
+            _ => todo!(),
         }
 
         Ok(())

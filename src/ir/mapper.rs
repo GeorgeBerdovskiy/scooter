@@ -1,8 +1,8 @@
 use super::{table::SymbolTable, Index};
 
-/// Maps identifiers for variables and functions to unique indices.
+/// Maps variable and function identifiers to unique indicies.
 pub struct Mapper<'a> {
-    /// Internal map from indices to Ts.
+    /// Internal map from strings to indices.
     table: SymbolTable<'a, Index>,
 
     /// Next available index.

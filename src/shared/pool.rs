@@ -41,7 +41,7 @@ impl<T: Clone + Eq + Hash> Pool<T> {
 
     /// Given a value, return its corresponding index.
     pub fn index_of(&self, value: &T) -> Option<&Index> {
-        self.lookup.get(&value)
+        self.lookup.get(value)
     }
 
     /// Given an index, return its corresponding value.
