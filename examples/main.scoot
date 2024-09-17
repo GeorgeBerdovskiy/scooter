@@ -1,5 +1,5 @@
 fn bar(z: i32, h: i32) -> i32 {
-    return 0;
+    return 1;
 }
 
 fn foo(y: i32) -> i32 {

@@ -148,10 +148,12 @@ impl<'a> Parser<'a> {
             self.expect(TokenKind::Semicolon)?;
         }
 
-        // Get the right curly brace
-        let rc = self.expect(TokenKind::RBrace)?;
-
-        Ok(Block { lc, stmts, rc })
+        Ok(Block {
+            lc,
+            stmts,
+            rc: self.expect(TokenKind::RBrace)?,
+            span: self.end(),
+        })
     }
 
     /// Parse a statement.
@@ -275,18 +277,21 @@ impl<'a> Parser<'a> {
                 } else {
                     Ok(Expr::Ident(Ident {
                         repr,
-                        span: current.span.unwrap(),
+                        span: self.end(),
                     }))
                 }
             }
 
-            _ => Err(ParseError {
-                reason: format!(
-                    "Expected an identifier, literal or function call... found {}",
-                    current.kind
-                ),
-                span: Some(self.end()),
-            }),
+            _ => {
+                self.advance(1);
+                Err(ParseError {
+                    reason: format!(
+                        "Expected an identifier, literal or function call... found {}",
+                        current.kind
+                    ),
+                    span: Some(self.end()),
+                })
+            }
         }
     }
 
@@ -312,10 +317,28 @@ impl<'a> Parser<'a> {
     fn parse_ty(&mut self) -> ParseResult<Ty> {
         self.start();
 
-        Ok(Ty {
-            ident: self.parse_ident()?,
-            span: self.end(),
-        })
+        let current = self.current();
+        match current.kind {
+            TokenKind::LParen => {
+                // Special case - the unit type '()'
+                self.expect(TokenKind::LParen)?;
+                self.expect(TokenKind::RParen)?;
+
+                let span: Span = self.end();
+                Ok(Ty {
+                    ident: Ident {
+                        repr: "()".to_owned(),
+                        span: span.clone(),
+                    },
+                    span: span,
+                })
+            }
+
+            _ => Ok(Ty {
+                ident: self.parse_ident()?,
+                span: self.end(),
+            }),
+        }
     }
 
     /// Start a span at the current location.
@@ -327,7 +350,7 @@ impl<'a> Parser<'a> {
     /// End a span at the current location.
     fn end(&mut self) -> Span {
         let from = self.starts.last().cloned().unwrap();
-        let to = self.input[self.index].clone().span.unwrap();
+        let to = self.input[self.index - 1].clone().span.unwrap();
 
         self.starts.pop();
         Span::new(from.start, to.end)
@@ -355,8 +378,9 @@ impl<'a> Parser<'a> {
     /// Return the current token if its kind matches `kind`, or an error otherwise.
     fn expect(&mut self, kind: TokenKind) -> ParseResult<Token> {
         if self.current_kind() == &kind {
+            let token = self.current().clone();
             self.advance(1);
-            return Ok(self.current().clone());
+            return Ok(token);
         }
 
         Err(ParseError {

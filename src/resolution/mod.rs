@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     ast::{visitor::Visit, File, Ident, ItemFn},
     ir::table::{self, SymbolTable},
@@ -13,7 +15,13 @@ pub struct Function {
 
 /// Represents a resolved type.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Type(pub Index);
+pub struct Type(pub String);
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 /// Raw strings should resolve to one of the following kinds of symbols.
 #[derive(Debug, Clone)]
@@ -27,7 +35,7 @@ pub enum Symbol {
 #[derive(Debug, Clone)]
 pub struct Local {
     /// The resolved type of this local.
-    ty: Type,
+    pub ty: Type,
 }
 
 /// This structure is responsible for name resolution.
@@ -39,17 +47,14 @@ pub struct Resolver<'a> {
     pub table: SymbolTable<'a, Symbol>,
 }
 
-/// Handy alias to prevent finger cramps.
-type Table<'a> = SymbolTable<'a, Symbol>;
-
 impl<'a> Resolver<'a> {
     /// Create a new resolver.
     pub fn new(ast: &'a File) -> Self {
         // Create a new symbol table and populate it with primitive types
         // Populate the map with primitive types
         let mut table = SymbolTable::new();
-        table.insert("!", Symbol::Type(Type(0)));
-        table.insert("i32", Symbol::Type(Type(1)));
+        table.insert("()", Symbol::Type(Type("()".to_owned())));
+        table.insert("i32", Symbol::Type(Type("i32".to_owned())));
 
         Resolver { file: ast, table }
     }
@@ -95,8 +100,9 @@ impl<'a> Visit<'a> for Resolver<'a> {
         let name = &item_fn.ident.repr;
 
         let symbol = Symbol::Function(Function {
-            // TODO: Don't unwrap.
-            return_type: self.resolve_ty(&item_fn.ty.ident).unwrap(),
+            return_type: self
+                .resolve_ty(&item_fn.ty.ident)
+                .unwrap_or(Type(String::from("()"))),
         });
 
         self.table.insert(name, symbol)

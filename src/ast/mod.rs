@@ -102,6 +102,9 @@ pub struct Block {
 
     /// The right curly brace.
     pub rc: Token,
+
+    /// The span of the entire block.
+    pub span: Span,
 }
 
 #[derive(Debug)]

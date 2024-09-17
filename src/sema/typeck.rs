@@ -1,6 +1,6 @@
 use crate::{
     ast::{visitor::Visit, Block, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Stmt},
-    resolution::{Resolver, Symbol, Type},
+    resolution::{Local, Resolver, Symbol, Type},
     shared::Span,
 };
 
@@ -38,19 +38,35 @@ impl<'a> TypeCk<'a> {
 impl<'a> Visit<'a> for TypeCk<'a> {
     fn visit_item_fn(&mut self, item_fn: &'a crate::ast::ItemFn) {
         // Does the type of the body match the expected return type?
-        match self.typeck_block(&item_fn.body) {
-            Err(err) => self.result = Err(err),
-            _ => {}
+        match self.resolver.resolve_ty(&item_fn.ty.ident) {
+            Some(expected) => {
+                match self.typeck_block(&item_fn.body) {
+                    Err(err) => self.result = Err(err),
+                    Ok(actual) => {
+                        if expected != actual {
+                            self.result = Err(TypeCkError { reason: format!("Function must return type '{}' but type '{}' is returned instead", expected, actual), span: Some(item_fn.ty.span.clone()) })
+                        }
+                    }
+                }
+            }
+
+            None => {
+                self.result = Err(TypeCkError {
+                    reason: format!("Unknown type '{}'", item_fn.ty.ident.repr),
+                    span: Some(item_fn.ty.span.clone()),
+                })
+            }
         }
     }
 }
 
 impl<'a> TypeCk<'a> {
     fn typeck_block(&mut self, block: &'a Block) -> TypeCkResult<Type> {
-        let mut result: Type = Type(0);
+        let mut result: Type = Type(String::from("()"));
 
         for (index, stmt) in block.stmts.iter().enumerate() {
-            self.typeck_stmt(stmt);
+            // Throw away the result of typechecking every statement except the last one
+            let _ = self.typeck_stmt(stmt);
 
             if index == block.stmts.len() - 1 {
                 // This is the return statement, and must be the type of the block
@@ -72,14 +88,15 @@ impl<'a> TypeCk<'a> {
                     Some(expected) => {
                         if expected == actual {
                             // This statement checks out
-                            self.resolver
-                                .table
-                                .insert(&local.ident.repr, Symbol::Type(actual.clone()));
+                            self.resolver.table.insert(
+                                &local.ident.repr,
+                                Symbol::Local(Local { ty: actual.clone() }),
+                            );
                             Ok(actual)
                         } else {
                             // The expected type doesn't match the actual type
                             Err(TypeCkError {
-                                reason: format!("The expression assigned to variable '{}' must have type '{:?}', but it really has type '{:?}'", local.ident.repr, expected, actual),
+                                reason: format!("The expression assigned to variable '{}' must have type '{}' but it actually has type '{}'", local.ident.repr, expected, actual),
                                 span: Some(local.expr.span().clone())
                             })
                         }
@@ -115,7 +132,7 @@ impl<'a> TypeCk<'a> {
 
     fn typeck_expr_lit(&mut self, expr_lit: &'a ExprLit) -> TypeCkResult<Type> {
         match expr_lit {
-            ExprLit::Num(num_lit) => Ok(Type(1)), // Right now, all literal numbers are `i32` values
+            ExprLit::Num(_) => Ok(Type(String::from("i32"))), // Right now, all literal numbers are `i32` values
         }
     }
 
@@ -123,7 +140,7 @@ impl<'a> TypeCk<'a> {
         match self.resolver.resolve_local(ident) {
             Some(ty) => Ok(ty),
             None => Err(TypeCkError {
-                reason: format!("Undefined local variable '{}'", ident.repr),
+                reason: format!("Cannot find '{}' in this scope", ident.repr),
                 span: Some(ident.span.clone()),
             }),
         }
@@ -138,7 +155,7 @@ impl<'a> TypeCk<'a> {
 
                     None => Err(TypeCkError {
                         reason: format!("Undefined function '{}'", call.ident.repr),
-                        span: Some(call.span.clone()),
+                        span: Some(call.ident.span.clone()),
                     }),
                 }
             }
@@ -156,8 +173,8 @@ impl<'a> TypeCk<'a> {
         } else {
             // The type of the lhs doesn't match the rhs
             Err(TypeCkError {
-                reason: format!("Left hand side of binary expression has type '{:?}', but the right hand side has type '{:?}'", lhs, rhs),
-                span: Some(expr_bin.span.clone())
+                reason: format!("Left hand side of binary expression has type '{}' but the right hand side has type '{}'", lhs, rhs),
+                span: Some(expr_bin.rhs.span().clone())
             })
         }
     }
