@@ -4,8 +4,6 @@ use crate::{
     shared::Span,
 };
 
-use super::Analysis;
-
 pub struct TypeCkError {
     /// The cause of this error.
     pub reason: String,

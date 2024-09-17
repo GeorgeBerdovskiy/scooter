@@ -12,17 +12,15 @@ mod utilities;
 
 use clap::Parser as ClapParser;
 use ir::LoweringEngine;
-use resolution::{Resolver, Symbol};
+use resolution::Resolver;
 use sema::basic::Basic;
 use sema::typeck::TypeCk;
 use sema::SemaEngine;
 
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::exit;
 
-use ir::table::SymbolTable;
 use lexer::Lexer;
 use parser::Parser;
 use utilities::error;
@@ -86,7 +84,7 @@ fn main() {
     }
 
     // Also perform type checking
-    let mut typeck = TypeCk::new(resolver);
+    let typeck = TypeCk::new(resolver);
     if let Err(err) = typeck.run(&ast) {
         error(&err.reason, &source, err.span);
         exit(1);

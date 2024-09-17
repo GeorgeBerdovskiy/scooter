@@ -1,10 +1,7 @@
 use std::fmt::Display;
 
-use crate::{
-    ast::{visitor::Visit, File, Ident, ItemFn},
-    ir::table::{self, SymbolTable},
-    shared::Index,
-};
+use crate::ast::{visitor::Visit, File, Ident, ItemFn};
+use crate::ir::table::SymbolTable;
 
 /// Represents a resolved function.
 #[derive(Debug, Clone)]

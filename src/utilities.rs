@@ -1,7 +1,5 @@
-use colored::Colorize;
-use std::process::exit;
-
 use crate::shared::Span;
+use colored::Colorize;
 
 /// Print an error to the command line.
 pub fn error<S: AsRef<str>>(msg: S, source: &str, span: Option<Span>) {
