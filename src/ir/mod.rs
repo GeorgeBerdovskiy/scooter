@@ -6,7 +6,7 @@ use crate::shared::Index;
 pub mod instr;
 pub mod lower;
 mod mapper;
-mod table;
+pub mod table;
 
 pub use instr::*;
 pub use lower::*;

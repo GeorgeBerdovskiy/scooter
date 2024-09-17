@@ -8,6 +8,6 @@ fn foo(y: i32) -> i32 {
     return b + a + bar(b, 2);
 }
 
-fn main(x: i32, y: i32) -> i32 {
+fn main() -> i32 {
     return 0;
 }

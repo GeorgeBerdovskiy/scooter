@@ -5,19 +5,24 @@ mod ast;
 mod ir;
 mod lexer;
 mod parser;
+mod resolution;
 mod sema;
 mod shared;
 mod utilities;
 
 use clap::Parser as ClapParser;
 use ir::LoweringEngine;
-use sema::check_main::CheckMain;
+use resolution::{Resolver, Symbol};
+use sema::basic::Basic;
+use sema::typeck::TypeCk;
 use sema::SemaEngine;
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::exit;
 
+use ir::table::SymbolTable;
 use lexer::Lexer;
 use parser::Parser;
 use utilities::error;
@@ -64,11 +69,27 @@ fn main() {
         }
     };
 
-    // Before lowering, we should run several semantic analyses
-    let mut sema = SemaEngine::new(&ast).register(Box::new(CheckMain::new()));
+    // Next, let's perform semantic analysis!
+    // First, we'll need to collect all exisiting function declarations.
+    let mut resolver = Resolver::new(&ast);
+    resolver.collect_functions();
 
-    if let Err(err) = sema.run() {
-        error(err.reason, &source, err.span)
+    // Now we can run some simple semantic analysis
+    let mut sema = SemaEngine::new(&ast).register(Box::new(Basic::new()));
+
+    if let Err(errs) = sema.run() {
+        // Output every error that occured
+        for err in errs {
+            error(err.reason, &source, err.span);
+        }
+        exit(1);
+    }
+
+    // Also perform type checking
+    let mut typeck = TypeCk::new(resolver);
+    if let Err(err) = typeck.run(&ast) {
+        error(&err.reason, &source, err.span);
+        exit(1);
     }
 
     // Next, we'll lower the AST to IR and generate a human readable IR file

@@ -4,8 +4,10 @@ use crate::shared::Span;
 
 use super::{Analysis, SemaError, SemaResult};
 
-/// Make sure the source code contains a valid main function.
-pub struct CheckMain {
+/// Performs several basic checks, including...
+/// - Does a `main` function exist?
+/// - Does the `main` function have no parameters?
+pub struct Basic {
     /// The main function identifier.
     main: Option<Ident>,
 
@@ -13,16 +15,16 @@ pub struct CheckMain {
     params: usize,
 }
 
-impl CheckMain {
+impl Basic {
     pub fn new() -> Self {
-        CheckMain {
+        Basic {
             main: None,
             params: 0,
         }
     }
 }
 
-impl Analysis for CheckMain {
+impl Analysis for Basic {
     fn run(&mut self, file: &File) -> SemaResult<()> {
         self.visit_file(file);
 
@@ -58,7 +60,7 @@ impl Analysis for CheckMain {
     }
 }
 
-impl Visit<'_> for CheckMain {
+impl Visit<'_> for Basic {
     fn visit_item_fn(&mut self, item_fn: &'_ crate::ast::ItemFn) {
         if item_fn.ident.repr == "main" {
             self.main = Some(item_fn.ident.clone());

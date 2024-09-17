@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::resolution::{Symbol, Type};
+
 #[derive(Debug, Clone)]
 pub struct SymbolTable<'a, T: Clone> {
     pub previous: Option<Box<SymbolTable<'a, T>>>,

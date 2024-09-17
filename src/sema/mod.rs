@@ -1,4 +1,5 @@
-pub mod check_main;
+pub mod basic;
+pub mod typeck;
 
 use crate::{ast::File, shared::Span};
 
@@ -41,11 +42,22 @@ impl<'a> SemaEngine<'a> {
     }
 
     /// Run all analyses.
-    pub fn run(&mut self) -> SemaResult<()> {
+    pub fn run(&mut self) -> Result<(), Vec<SemaError>> {
+        let mut errors = Vec::new();
+
         for analysis in &mut self.analyses {
-            analysis.run(&self.ast)?;
+            match analysis.run(&self.ast) {
+                Ok(_) => {}
+                Err(err) => {
+                    errors.push(err);
+                }
+            }
         }
 
-        Ok(())
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }

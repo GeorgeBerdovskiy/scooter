@@ -22,6 +22,4 @@ pub fn error<S: AsRef<str>>(msg: S, source: &str, span: Option<Span>) {
         println!("{}:{}", span.start.line, line);
         println!("{} {}\n", " ".repeat(col_num_padding), marker.red().bold());
     }
-
-    exit(1);
 }
