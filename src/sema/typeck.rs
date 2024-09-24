@@ -1,5 +1,5 @@
 use crate::{
-    ast::{visitor::Visit, Block, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Stmt},
+    ast::{visitor::Visit, Block, Expr, ExprBin, ExprCall, ExprLit, ExprStruct, File, Ident, Stmt},
     resolution::{Local, Resolver, Symbol, Type},
     shared::Span,
 };
@@ -36,7 +36,30 @@ impl<'a> TypeCk<'a> {
 impl<'a> Visit<'a> for TypeCk<'a> {
     fn visit_item_fn(&mut self, item_fn: &'a crate::ast::ItemFn) {
         // Does the type of the body match the expected return type?
-        match self.resolver.resolve_ty(&item_fn.ty.ident) {
+        match self.resolver.resolve_ty(&item_fn.ty.ident.repr) {
+            Some(expected) => {
+                match self.typeck_block(&item_fn.body) {
+                    Err(err) => self.result = Err(err),
+                    Ok(actual) => {
+                        if expected != actual {
+                            self.result = Err(TypeCkError { reason: format!("Function must return type '{}' but type '{}' is returned instead", expected, actual), span: Some(item_fn.ty.span.clone()) })
+                        }
+                    }
+                }
+            }
+
+            None => {
+                self.result = Err(TypeCkError {
+                    reason: format!("Unknown type '{}'", item_fn.ty.ident.repr),
+                    span: Some(item_fn.ty.span.clone()),
+                })
+            }
+        }
+    }
+
+    fn visit_impl_item_fn(&mut self, item_fn: &'a crate::ast::ImplItemFn) {
+        // Does the type of the body match the expected return type?
+        match self.resolver.resolve_ty(&item_fn.ty.ident.repr) {
             Some(expected) => {
                 match self.typeck_block(&item_fn.body) {
                     Err(err) => self.result = Err(err),
@@ -60,11 +83,11 @@ impl<'a> Visit<'a> for TypeCk<'a> {
 
 impl<'a> TypeCk<'a> {
     fn typeck_block(&mut self, block: &'a Block) -> TypeCkResult<Type> {
-        let mut result: Type = Type(String::from("()"));
+        let mut result: Type = Type::Primitive(String::from("()"));
 
         for (index, stmt) in block.stmts.iter().enumerate() {
             // Throw away the result of typechecking every statement except the last one
-            let _ = self.typeck_stmt(stmt);
+            let _ = self.typeck_stmt(stmt)?;
 
             if index == block.stmts.len() - 1 {
                 // This is the return statement, and must be the type of the block
@@ -80,7 +103,7 @@ impl<'a> TypeCk<'a> {
             Stmt::Local(local) => {
                 // Type check the expression
                 let actual = self.typeck_expr(&local.expr)?;
-                let expected = self.resolver.resolve_ty(&local.ty.ident);
+                let expected = self.resolver.resolve_ty(&local.ty.ident.repr);
 
                 match expected {
                     Some(expected) => {
@@ -125,12 +148,13 @@ impl<'a> TypeCk<'a> {
             Expr::Call(expr_call) => self.typeck_expr_call(expr_call),
             Expr::Ident(ident) => self.typeck_ident(ident),
             Expr::Lit(expr_lit) => self.typeck_expr_lit(expr_lit),
+            Expr::Struct(expr_struct) => self.typeck_expr_struct(expr_struct),
         }
     }
 
     fn typeck_expr_lit(&mut self, expr_lit: &'a ExprLit) -> TypeCkResult<Type> {
         match expr_lit {
-            ExprLit::Num(_) => Ok(Type(String::from("i32"))), // Right now, all literal numbers are `i32` values
+            ExprLit::Num(_) => Ok(Type::Primitive(String::from("i32"))), // Right now, all literal numbers are `i32` values
         }
     }
 
@@ -174,6 +198,58 @@ impl<'a> TypeCk<'a> {
                 reason: format!("Left hand side of binary expression has type '{}' but the right hand side has type '{}'", lhs, rhs),
                 span: Some(expr_bin.rhs.span().clone())
             })
+        }
+    }
+
+    fn typeck_expr_struct(&mut self, expr_struct: &'a ExprStruct) -> TypeCkResult<Type> {
+        // Make sure that every field is provided an expression with the correct type
+        match self.resolver.resolve_ty(&expr_struct.ident.repr) {
+            Some(ty) => {
+                match &ty {
+                    Type::Primitive(repr) => Err(TypeCkError {
+                        reason: format!("The type '{}' is not a struct", repr),
+                        span: Some(expr_struct.ident.span.clone()),
+                    }),
+
+                    Type::Struct(strct) => {
+                        for arg in &expr_struct.args.args {
+                            // Does this argument exist in this struct?
+                            if !strct.fields.contains_key(&arg.ident.repr) {
+                                return Err(TypeCkError {
+                                    reason: format!(
+                                        "Struct '{}' has no field '{}'",
+                                        expr_struct.ident.repr, arg.ident.repr
+                                    ),
+                                    span: Some(expr_struct.ident.span.clone()),
+                                });
+                            } else {
+                                // Does the provided expression have the correct type?
+                                let e = &arg.expr;
+
+                                let expected_ty = self
+                                    .resolver
+                                    .resolve_ty(&strct.fields[&arg.ident.repr])
+                                    .unwrap();
+                                let actual_ty = self.typeck_expr(&e)?;
+
+                                if expected_ty != actual_ty {
+                                    return Err(TypeCkError {
+                                        reason: format!("Field '{}' of '{}' must have type '{}', but an expression of type '{}' was provided", arg.ident.repr, expr_struct.ident.repr, expected_ty, actual_ty),
+                                        span: Some(expr_struct.ident.span.clone()),
+                                    });
+                                }
+                            }
+                        }
+
+                        Ok(ty)
+                    }
+                }
+            }
+
+            None => Err(TypeCkError {
+                reason: format!("The type '{}' doesn't exist", expr_struct.ident.repr),
+                span: Some(expr_struct.ident.span.clone()),
+            }),
         }
     }
 }

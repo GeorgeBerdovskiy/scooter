@@ -83,6 +83,8 @@ impl<'a> Lexer<'a> {
             match raw.as_str() {
                 "fn" => Ok(Token::spanned(TokenKind::KwFn, span)),
                 "struct" => Ok(Token::spanned(TokenKind::KwStruct, span)),
+                "impl" => Ok(Token::spanned(TokenKind::KwImpl, span)),
+                "self" => Ok(Token::spanned(TokenKind::KwSelf, span)),
                 "let" => Ok(Token::spanned(TokenKind::KwLet, span)),
                 "return" => Ok(Token::spanned(TokenKind::KwRet, span)),
                 _ => Ok(Token::spanned(TokenKind::Ident(raw), span)),

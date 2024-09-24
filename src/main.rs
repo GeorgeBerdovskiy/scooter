@@ -1,6 +1,5 @@
 #![feature(concat_idents)]
 
-mod asm;
 mod ast;
 mod ir;
 mod lexer;
@@ -11,7 +10,7 @@ mod shared;
 mod utilities;
 
 use clap::Parser as ClapParser;
-use ir::LoweringEngine;
+// use ir::LoweringEngine;
 use resolution::Resolver;
 use sema::basic::Basic;
 use sema::typeck::TypeCk;
@@ -67,11 +66,10 @@ fn main() {
         }
     };
 
-    println!("{:#?}", ast);
-
     // Next, let's perform semantic analysis!
     // First, we'll need to collect all exisiting function declarations.
     let mut resolver = Resolver::new(&ast);
+    resolver.collect_tys();
     resolver.collect_functions();
 
     // Now we can run some simple semantic analysis

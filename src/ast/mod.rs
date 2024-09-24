@@ -12,6 +12,7 @@ pub struct File {
 pub enum Item {
     Fn(ItemFn),
     Struct(ItemStruct),
+    Impl(ItemImpl),
 }
 
 /// Represents a function item (declaration).
@@ -43,6 +44,49 @@ pub struct ItemFn {
 
     /// The function span.
     pub span: Span,
+}
+
+/// Represents a list of impl function parameters.
+#[derive(Debug)]
+pub struct ImplParamList {
+    /// Receiver
+    pub receiver: Option<Token>,
+
+    /// List of parameters
+    pub params: Vec<Param>,
+
+    /// Span of the entire puncuated list.
+    pub span: Span,
+}
+
+/// Represents a list of function parameters.
+#[derive(Debug)]
+pub struct ParamList {
+    /// List of parameters
+    pub params: Vec<Param>,
+
+    /// Span of the entire puncuated list.
+    pub span: Span,
+}
+
+impl ParamList {
+    /// Returns the length of the internal list of parameters.
+    pub fn len(&self) -> usize {
+        self.params.len()
+    }
+}
+
+/// Represents a function parameter.
+#[derive(Debug)]
+pub struct Param {
+    /// The parameter identifier.
+    pub ident: Ident,
+
+    /// The `:` symbol.
+    pub colon: Token,
+
+    /// The parameter type.
+    pub ty: Ty,
 }
 
 /// Represents a struct item (declaration).
@@ -99,34 +143,56 @@ pub struct FieldNamed {
     pub span: Span,
 }
 
-/// Represents a list of function parameters.
 #[derive(Debug)]
-pub struct ParamList {
-    /// List of parameters
-    pub params: Vec<Param>,
+/// Represents an implementation.
+pub struct ItemImpl {
+    /// The `impl` keyword.
+    pub kw: Token,
 
-    /// Span of the entire puncuated list.
+    pub ident: Ident,
+
+    pub lb: Token,
+
+    pub items: Vec<ImplItem>,
+
+    pub rb: Token,
+
     pub span: Span,
 }
 
-impl ParamList {
-    /// Returns the length of the internal list of parameters.
-    pub fn len(&self) -> usize {
-        self.params.len()
-    }
+#[derive(Debug)]
+pub enum ImplItem {
+    Fn(ImplItemFn),
 }
 
-/// Represents a function parameter.
 #[derive(Debug)]
-pub struct Param {
-    /// The parameter identifier.
+pub struct ImplItemFn {
+    /// The `fn` keyword.
+    pub kw: Token,
+
+    /// The function identifier.
     pub ident: Ident,
 
-    /// The `:` symbol.
-    pub colon: Token,
+    /// The left parenthesis.
+    pub lp: Token,
 
-    /// The parameter type.
+    /// The function parameters
+    pub params: ImplParamList,
+
+    /// The right parenthesis.
+    pub rp: Token,
+
+    /// The `->` symbol.
+    pub arrow: Token,
+
+    /// The return type.
     pub ty: Ty,
+
+    /// The function body.
+    pub body: Block,
+
+    /// The function span.
+    pub span: Span,
 }
 
 #[derive(Debug, Clone)]
@@ -185,6 +251,7 @@ pub struct Return {
 pub enum Expr {
     Call(ExprCall),
     Binary(ExprBin),
+    Struct(ExprStruct),
     Lit(ExprLit),
     Ident(Ident),
 }
@@ -194,10 +261,42 @@ impl Expr {
         match self {
             Self::Call(expr_call) => expr_call.span(),
             Self::Binary(expr_bin) => &expr_bin.span,
+            Self::Struct(expr_struct) => &expr_struct.span,
             Self::Lit(expr_lit) => expr_lit.span(),
             Self::Ident(ident) => &ident.span,
         }
     }
+}
+
+#[derive(Debug)]
+pub struct ExprStruct {
+    pub ident: Ident,
+
+    pub lb: Token,
+
+    pub args: NamedArgList,
+
+    pub rb: Token,
+
+    pub span: Span,
+}
+
+#[derive(Debug)]
+pub struct NamedArgList {
+    pub args: Vec<NamedArg>,
+
+    pub span: Span,
+}
+
+#[derive(Debug)]
+pub struct NamedArg {
+    pub ident: Ident,
+
+    pub colon: Token,
+
+    pub expr: Expr,
+
+    pub span: Span,
 }
 
 #[derive(Debug)]

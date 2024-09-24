@@ -2,8 +2,9 @@
 use paste::paste;
 
 use super::{
-    Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, FieldNamed, Fields, FieldsNamed, File, Ident,
-    Item, ItemFn, ItemStruct, LitNum, Local, Return, Stmt, Ty,
+    Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, ExprStruct, FieldNamed, Fields, FieldsNamed,
+    File, Ident, ImplItem, ImplItemFn, Item, ItemFn, ItemImpl, ItemStruct, LitNum, Local, Return,
+    Stmt, Ty,
 };
 
 /// This macro generates the `Visitor` trait. Unfortunately, you still have to manually implement each `visit_*` function
@@ -31,15 +32,21 @@ visitor! {
     fields: Fields,
     fields_named: FieldsNamed,
     field_named: FieldNamed,
+    item_impl: ItemImpl,
+    impl_item: ImplItem,
+    impl_item_fn: ImplItemFn,
     ident: Ident,
     block: Block,
     stmt: Stmt,
     local: Local,
     expr: Expr,
     ty: Ty,
+
     expr_bin: ExprBin,
+    expr_struct: ExprStruct,
     expr_call: ExprCall,
     expr_lit: ExprLit,
+
     call_fn: CallFn,
     lit_num: LitNum,
     ret: Return
@@ -55,6 +62,7 @@ pub fn visit_item<'a>(visitor: &mut impl Visit<'a>, item: &'a Item) {
     match item {
         Item::Fn(item_fn) => visitor.visit_item_fn(&item_fn),
         Item::Struct(item_struct) => visitor.visit_item_struct(item_struct),
+        Item::Impl(item_impl) => visitor.visit_item_impl(item_impl),
     }
 }
 
@@ -83,6 +91,25 @@ pub fn visit_fields_named<'a>(visitor: &mut impl Visit<'a>, fields_named: &'a Fi
 pub fn visit_field_named<'a>(visitor: &mut impl Visit<'a>, field_named: &'a FieldNamed) {
     visitor.visit_ident(&field_named.ident);
     visitor.visit_ty(&field_named.ty);
+}
+
+pub fn visit_item_impl<'a>(visitor: &mut impl Visit<'a>, item_impl: &'a ItemImpl) {
+    visitor.visit_ident(&item_impl.ident);
+
+    for item in &item_impl.items {
+        visitor.visit_impl_item(item);
+    }
+}
+
+pub fn visit_impl_item<'a>(visitor: &mut impl Visit<'a>, impl_item: &'a ImplItem) {
+    match impl_item {
+        ImplItem::Fn(impl_item_fn) => visitor.visit_impl_item_fn(impl_item_fn),
+    }
+}
+
+pub fn visit_impl_item_fn<'a>(visitor: &mut impl Visit<'a>, impl_item_fn: &'a ImplItemFn) {
+    visitor.visit_ident(&impl_item_fn.ident);
+    visitor.visit_block(&impl_item_fn.body);
 }
 
 pub fn visit_ident<'a>(visitor: &mut impl Visit<'a>, ident: &'a Ident) {
@@ -115,6 +142,7 @@ pub fn visit_expr<'a>(visitor: &mut impl Visit<'a>, expr: &'a Expr) {
         Expr::Call(expr_call) => visitor.visit_expr_call(expr_call),
         Expr::Lit(expr_lit) => visitor.visit_expr_lit(expr_lit),
         Expr::Ident(ident) => visitor.visit_ident(ident),
+        Expr::Struct(expr_struct) => visitor.visit_expr_struct(expr_struct),
     }
 }
 
@@ -125,6 +153,10 @@ pub fn visit_ty<'a>(visitor: &mut impl Visit<'a>, ty: &'a Ty) {
 pub fn visit_expr_bin<'a>(visitor: &mut impl Visit<'a>, expr_bin: &'a ExprBin) {
     visitor.visit_expr(&expr_bin.lhs);
     visitor.visit_expr(&expr_bin.rhs);
+}
+
+pub fn visit_expr_struct<'a>(visitor: &mut impl Visit<'a>, expr_struct: &'a ExprStruct) {
+    // Nothing for now
 }
 
 pub fn visit_expr_call<'a>(visitor: &mut impl Visit<'a>, expr_call: &'a ExprCall) {

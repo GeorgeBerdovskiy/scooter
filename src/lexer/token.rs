@@ -27,6 +27,8 @@ impl Token {
 pub enum TokenKind {
     KwFn,          // "fn"
     KwStruct,      // "struct"
+    KwImpl,        // "impl"
+    KwSelf,        // "self"
     KwLet,         // "let"
     KwRet,         // "return"
     Ident(String), // "foo", "bar", "baz"
@@ -50,6 +52,8 @@ impl Display for TokenKind {
         match self {
             Self::KwFn => write!(f, "'fn'"),
             Self::KwStruct => write!(f, "'struct'"),
+            Self::KwImpl => write!(f, "'impl'"),
+            Self::KwSelf => write!(f, "'self'"),
             Self::KwLet => write!(f, "'let'"),
             Self::KwRet => write!(f, "'return'"),
             Self::Ident(str) => write!(f, "identifier '{str}'"),

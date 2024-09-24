@@ -218,10 +218,10 @@ File {
                 },
             },
         ),
-        Fn(
-            ItemFn {
+        Impl(
+            ItemImpl {
                 kw: Token {
-                    kind: KwFn,
+                    kind: KwImpl,
                     span: Some(
                         Span {
                             start: Location {
@@ -230,6 +230,265 @@ File {
                             },
                             end: Location {
                                 line: 6,
+                                column: 4,
+                            },
+                        },
+                    ),
+                },
+                ident: Ident {
+                    repr: "BarFoo",
+                    span: Span {
+                        start: Location {
+                            line: 6,
+                            column: 6,
+                        },
+                        end: Location {
+                            line: 6,
+                            column: 11,
+                        },
+                    },
+                },
+                lb: Token {
+                    kind: LBrace,
+                    span: Some(
+                        Span {
+                            start: Location {
+                                line: 6,
+                                column: 13,
+                            },
+                            end: Location {
+                                line: 6,
+                                column: 13,
+                            },
+                        },
+                    ),
+                },
+                items: [
+                    Fn(
+                        ImplItemFn {
+                            kw: Token {
+                                kind: KwFn,
+                                span: Some(
+                                    Span {
+                                        start: Location {
+                                            line: 7,
+                                            column: 5,
+                                        },
+                                        end: Location {
+                                            line: 7,
+                                            column: 6,
+                                        },
+                                    },
+                                ),
+                            },
+                            ident: Ident {
+                                repr: "some",
+                                span: Span {
+                                    start: Location {
+                                        line: 7,
+                                        column: 8,
+                                    },
+                                    end: Location {
+                                        line: 7,
+                                        column: 11,
+                                    },
+                                },
+                            },
+                            lp: Token {
+                                kind: LParen,
+                                span: Some(
+                                    Span {
+                                        start: Location {
+                                            line: 7,
+                                            column: 12,
+                                        },
+                                        end: Location {
+                                            line: 7,
+                                            column: 12,
+                                        },
+                                    },
+                                ),
+                            },
+                            params: ImplParamList {
+                                receiver: Some(
+                                    Token {
+                                        kind: KwSelf,
+                                        span: Some(
+                                            Span {
+                                                start: Location {
+                                                    line: 7,
+                                                    column: 13,
+                                                },
+                                                end: Location {
+                                                    line: 7,
+                                                    column: 16,
+                                                },
+                                            },
+                                        ),
+                                    },
+                                ),
+                                params: [],
+                                span: Span {
+                                    start: Location {
+                                        line: 7,
+                                        column: 13,
+                                    },
+                                    end: Location {
+                                        line: 7,
+                                        column: 16,
+                                    },
+                                },
+                            },
+                            rp: Token {
+                                kind: RParen,
+                                span: Some(
+                                    Span {
+                                        start: Location {
+                                            line: 7,
+                                            column: 17,
+                                        },
+                                        end: Location {
+                                            line: 7,
+                                            column: 17,
+                                        },
+                                    },
+                                ),
+                            },
+                            arrow: Token {
+                                kind: RArrow,
+                                span: Some(
+                                    Span {
+                                        start: Location {
+                                            line: 7,
+                                            column: 19,
+                                        },
+                                        end: Location {
+                                            line: 7,
+                                            column: 20,
+                                        },
+                                    },
+                                ),
+                            },
+                            ty: Ty {
+                                ident: Ident {
+                                    repr: "()",
+                                    span: Span {
+                                        start: Location {
+                                            line: 7,
+                                            column: 22,
+                                        },
+                                        end: Location {
+                                            line: 7,
+                                            column: 23,
+                                        },
+                                    },
+                                },
+                                span: Span {
+                                    start: Location {
+                                        line: 7,
+                                        column: 22,
+                                    },
+                                    end: Location {
+                                        line: 7,
+                                        column: 23,
+                                    },
+                                },
+                            },
+                            body: Block {
+                                lc: Token {
+                                    kind: LBrace,
+                                    span: Some(
+                                        Span {
+                                            start: Location {
+                                                line: 7,
+                                                column: 25,
+                                            },
+                                            end: Location {
+                                                line: 7,
+                                                column: 25,
+                                            },
+                                        },
+                                    ),
+                                },
+                                stmts: [],
+                                rc: Token {
+                                    kind: RBrace,
+                                    span: Some(
+                                        Span {
+                                            start: Location {
+                                                line: 9,
+                                                column: 5,
+                                            },
+                                            end: Location {
+                                                line: 9,
+                                                column: 5,
+                                            },
+                                        },
+                                    ),
+                                },
+                                span: Span {
+                                    start: Location {
+                                        line: 7,
+                                        column: 25,
+                                    },
+                                    end: Location {
+                                        line: 9,
+                                        column: 5,
+                                    },
+                                },
+                            },
+                            span: Span {
+                                start: Location {
+                                    line: 7,
+                                    column: 5,
+                                },
+                                end: Location {
+                                    line: 9,
+                                    column: 5,
+                                },
+                            },
+                        },
+                    ),
+                ],
+                rb: Token {
+                    kind: RBrace,
+                    span: Some(
+                        Span {
+                            start: Location {
+                                line: 10,
+                                column: 1,
+                            },
+                            end: Location {
+                                line: 10,
+                                column: 1,
+                            },
+                        },
+                    ),
+                },
+                span: Span {
+                    start: Location {
+                        line: 6,
+                        column: 1,
+                    },
+                    end: Location {
+                        line: 10,
+                        column: 1,
+                    },
+                },
+            },
+        ),
+        Fn(
+            ItemFn {
+                kw: Token {
+                    kind: KwFn,
+                    span: Some(
+                        Span {
+                            start: Location {
+                                line: 12,
+                                column: 1,
+                            },
+                            end: Location {
+                                line: 12,
                                 column: 2,
                             },
                         },
@@ -239,11 +498,11 @@ File {
                     repr: "main",
                     span: Span {
                         start: Location {
-                            line: 6,
+                            line: 12,
                             column: 4,
                         },
                         end: Location {
-                            line: 6,
+                            line: 12,
                             column: 7,
                         },
                     },
@@ -253,11 +512,11 @@ File {
                     span: Some(
                         Span {
                             start: Location {
-                                line: 6,
+                                line: 12,
                                 column: 8,
                             },
                             end: Location {
-                                line: 6,
+                                line: 12,
                                 column: 8,
                             },
                         },
@@ -267,11 +526,11 @@ File {
                     params: [],
                     span: Span {
                         start: Location {
-                            line: 6,
+                            line: 12,
                             column: 9,
                         },
                         end: Location {
-                            line: 6,
+                            line: 12,
                             column: 8,
                         },
                     },
@@ -281,11 +540,11 @@ File {
                     span: Some(
                         Span {
                             start: Location {
-                                line: 6,
+                                line: 12,
                                 column: 9,
                             },
                             end: Location {
-                                line: 6,
+                                line: 12,
                                 column: 9,
                             },
                         },
@@ -296,11 +555,11 @@ File {
                     span: Some(
                         Span {
                             start: Location {
-                                line: 6,
+                                line: 12,
                                 column: 11,
                             },
                             end: Location {
-                                line: 6,
+                                line: 12,
                                 column: 12,
                             },
                         },
@@ -311,22 +570,22 @@ File {
                         repr: "i32",
                         span: Span {
                             start: Location {
-                                line: 6,
+                                line: 12,
                                 column: 14,
                             },
                             end: Location {
-                                line: 6,
+                                line: 12,
                                 column: 16,
                             },
                         },
                     },
                     span: Span {
                         start: Location {
-                            line: 6,
+                            line: 12,
                             column: 14,
                         },
                         end: Location {
-                            line: 6,
+                            line: 12,
                             column: 16,
                         },
                     },
@@ -337,11 +596,11 @@ File {
                         span: Some(
                             Span {
                                 start: Location {
-                                    line: 6,
+                                    line: 12,
                                     column: 18,
                                 },
                                 end: Location {
-                                    line: 6,
+                                    line: 12,
                                     column: 18,
                                 },
                             },
@@ -355,11 +614,11 @@ File {
                                     span: Some(
                                         Span {
                                             start: Location {
-                                                line: 7,
+                                                line: 13,
                                                 column: 5,
                                             },
                                             end: Location {
-                                                line: 7,
+                                                line: 13,
                                                 column: 10,
                                             },
                                         },
@@ -371,11 +630,11 @@ File {
                                             value: 0,
                                             span: Span {
                                                 start: Location {
-                                                    line: 7,
+                                                    line: 13,
                                                     column: 12,
                                                 },
                                                 end: Location {
-                                                    line: 7,
+                                                    line: 13,
                                                     column: 12,
                                                 },
                                             },
@@ -384,11 +643,11 @@ File {
                                 ),
                                 span: Span {
                                     start: Location {
-                                        line: 7,
+                                        line: 13,
                                         column: 5,
                                     },
                                     end: Location {
-                                        line: 7,
+                                        line: 13,
                                         column: 12,
                                     },
                                 },
@@ -400,11 +659,11 @@ File {
                         span: Some(
                             Span {
                                 start: Location {
-                                    line: 8,
+                                    line: 14,
                                     column: 1,
                                 },
                                 end: Location {
-                                    line: 8,
+                                    line: 14,
                                     column: 1,
                                 },
                             },
@@ -412,22 +671,22 @@ File {
                     },
                     span: Span {
                         start: Location {
-                            line: 6,
+                            line: 12,
                             column: 18,
                         },
                         end: Location {
-                            line: 7,
+                            line: 13,
                             column: 13,
                         },
                     },
                 },
                 span: Span {
                     start: Location {
-                        line: 6,
+                        line: 12,
                         column: 1,
                     },
                     end: Location {
-                        line: 7,
+                        line: 13,
                         column: 13,
                     },
                 },
@@ -440,8 +699,35 @@ File {
             column: 1,
         },
         end: Location {
-            line: 7,
+            line: 13,
             column: 13,
         },
+    },
+}
+SymbolTable {
+    previous: None,
+    symbols: {
+        "i32": Type(
+            Type(
+                "i32",
+            ),
+        ),
+        "BarFoo": Type(
+            Type(
+                "BarFoo",
+            ),
+        ),
+        "()": Type(
+            Type(
+                "()",
+            ),
+        ),
+        "main": Function(
+            Function {
+                return_type: Type(
+                    "i32",
+                ),
+            },
+        ),
     },
 }

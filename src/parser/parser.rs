@@ -1,7 +1,9 @@
+use std::fmt::format;
+
 use crate::ast::{
-    ArgList, BinaryOp, Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, FieldNamed, Fields,
-    FieldsNamed, File, Ident, Item, ItemFn, ItemStruct, LitNum, Local, OpKind, Param, ParamList,
-    Return, Stmt, Ty,
+    ArgList, BinaryOp, Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, ExprStruct, FieldNamed,
+    Fields, FieldsNamed, File, Ident, ImplItem, ImplItemFn, ImplParamList, Item, ItemFn, ItemImpl,
+    ItemStruct, LitNum, Local, NamedArg, NamedArgList, OpKind, Param, ParamList, Return, Stmt, Ty,
 };
 use crate::lexer::{Token, TokenKind};
 use crate::shared::Span;
@@ -56,12 +58,13 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse an item.
-    pub fn parse_item(&mut self) -> ParseResult<Item> {
+    fn parse_item(&mut self) -> ParseResult<Item> {
         let kind = self.current_kind();
 
         match kind {
             TokenKind::KwFn => self.parse_item_fn(),
             TokenKind::KwStruct => self.parse_item_struct(),
+            TokenKind::KwImpl => self.parse_item_impl(),
             _ => Err(ParseError {
                 reason: format!("Expected 'fn' or 'mod', found {kind}"),
                 span: Some(self.end()),
@@ -69,8 +72,61 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse an impl block.
+    fn parse_item_impl(&mut self) -> ParseResult<Item> {
+        self.start();
+        let kw = self.expect(TokenKind::KwImpl)?;
+
+        let ident = self.parse_ident()?;
+
+        let lb = self.expect(TokenKind::LBrace)?;
+
+        let mut items = Vec::new();
+        while self.current_kind() != &TokenKind::RBrace {
+            items.push(self.parse_impl_item()?);
+        }
+
+        Ok(Item::Impl(ItemImpl {
+            kw,
+            ident,
+            lb,
+            items,
+            rb: self.expect(TokenKind::RBrace)?,
+            span: self.end(),
+        }))
+    }
+
+    fn parse_impl_item(&mut self) -> ParseResult<ImplItem> {
+        let kind = self.current_kind();
+        if kind == &TokenKind::KwFn {
+            self.parse_impl_item_fn()
+        } else {
+            Err(ParseError {
+                reason: format!("Expected a function item, found {kind}"),
+                span: self.current().span.clone(),
+            })
+        }
+    }
+
+    fn parse_impl_item_fn(&mut self) -> ParseResult<ImplItem> {
+        // Start a new span
+        self.start();
+
+        Ok(ImplItem::Fn(ImplItemFn {
+            kw: self.expect(TokenKind::KwFn)?,
+            ident: self.parse_ident()?,
+            lp: self.expect(TokenKind::LParen)?,
+            params: self.parse_impl_param_list()?,
+            rp: self.expect(TokenKind::RParen)?,
+            arrow: self.expect(TokenKind::RArrow)?,
+            ty: self.parse_ty()?,
+            body: self.parse_block()?,
+            span: self.end(),
+        }))
+    }
+
     /// Parse a struct declaration.
-    pub fn parse_item_struct(&mut self) -> ParseResult<Item> {
+    fn parse_item_struct(&mut self) -> ParseResult<Item> {
         self.start();
 
         Ok(Item::Struct(ItemStruct {
@@ -123,7 +179,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a function declaration.
-    pub fn parse_item_fn(&mut self) -> ParseResult<Item> {
+    fn parse_item_fn(&mut self) -> ParseResult<Item> {
         // Start a new span
         self.start();
 
@@ -160,6 +216,41 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// Parse a list of function parameters.
+    fn parse_impl_param_list(&mut self) -> ParseResult<ImplParamList> {
+        self.start();
+
+        let receiver = match self.current_kind() {
+            TokenKind::KwSelf => {
+                let rcvr = Some(self.expect(TokenKind::KwSelf)?);
+
+                if self.current_kind() != &TokenKind::RParen {
+                    self.expect(TokenKind::Comma)?;
+                }
+
+                rcvr
+            }
+            _ => None,
+        };
+
+        let mut params = Vec::new();
+
+        while self.current_kind() != &TokenKind::RParen {
+            params.push(self.parse_param()?);
+
+            if self.current_kind() != &TokenKind::RParen {
+                // Since we haven't reached the closing parenthesis yet, we expect a comma
+                self.expect(TokenKind::Comma)?;
+            }
+        }
+
+        Ok(ImplParamList {
+            receiver,
+            params,
+            span: self.end(),
+        })
+    }
+
     /// Parse a single function parameter.
     fn parse_param(&mut self) -> ParseResult<Param> {
         Ok(Param {
@@ -170,7 +261,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse an identifier.
-    pub fn parse_ident(&mut self) -> ParseResult<Ident> {
+    fn parse_ident(&mut self) -> ParseResult<Ident> {
         let current = self.current().clone();
 
         match current.kind {
@@ -189,7 +280,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a block of statements enclosed by curly braces.
-    pub fn parse_block(&mut self) -> ParseResult<Block> {
+    fn parse_block(&mut self) -> ParseResult<Block> {
         self.start();
 
         // Get the left curly brace
@@ -251,7 +342,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse an expression (`expr ::= term { "+" term }`).
-    pub fn parse_expr(&mut self) -> ParseResult<Expr> {
+    fn parse_expr(&mut self) -> ParseResult<Expr> {
         let mut expr = self.parse_term()?;
 
         while self.current_kind() == &TokenKind::Plus {
@@ -277,7 +368,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse a term (`term ::= factor { "*" factor }`).
-    pub fn parse_term(&mut self) -> ParseResult<Expr> {
+    fn parse_term(&mut self) -> ParseResult<Expr> {
         let mut expr = self.parse_factor()?;
 
         while self.current_kind() == &TokenKind::Star {
@@ -320,19 +411,24 @@ impl<'a> Parser<'a> {
             TokenKind::Ident(repr) => {
                 let ident = self.parse_ident()?;
 
-                if self.current_kind() == &TokenKind::LParen {
-                    Ok(Expr::Call(ExprCall::Fn(CallFn {
+                match self.current_kind() {
+                    TokenKind::LParen => Ok(Expr::Call(ExprCall::Fn(CallFn {
                         ident,
                         lp: self.expect(TokenKind::LParen)?,
                         args: self.parse_arg_list()?,
                         rp: self.expect(TokenKind::RParen)?,
                         span: self.end(),
-                    })))
-                } else {
-                    Ok(Expr::Ident(Ident {
-                        repr,
+                    }))),
+
+                    TokenKind::LBrace => Ok(Expr::Struct(ExprStruct {
+                        ident,
+                        lb: self.expect(TokenKind::LBrace)?,
+                        args: self.parse_named_arg_list()?,
+                        rb: self.expect(TokenKind::RBrace)?,
                         span: self.end(),
-                    }))
+                    })),
+
+                    _ => Ok(Expr::Ident(ident)),
                 }
             }
 
@@ -363,6 +459,35 @@ impl<'a> Parser<'a> {
 
         Ok(ArgList {
             args,
+            span: self.end(),
+        })
+    }
+
+    fn parse_named_arg_list(&mut self) -> ParseResult<NamedArgList> {
+        self.start();
+        let mut args = Vec::new();
+
+        while self.current_kind() != &TokenKind::RBrace {
+            args.push(self.parse_named_arg()?);
+
+            if self.current_kind() != &TokenKind::RBrace {
+                self.expect(TokenKind::Comma)?;
+            }
+        }
+
+        Ok(NamedArgList {
+            args,
+            span: self.end(),
+        })
+    }
+
+    fn parse_named_arg(&mut self) -> ParseResult<NamedArg> {
+        self.start();
+
+        Ok(NamedArg {
+            ident: self.parse_ident()?,
+            colon: self.expect(TokenKind::Colon)?,
+            expr: self.parse_expr()?,
             span: self.end(),
         })
     }

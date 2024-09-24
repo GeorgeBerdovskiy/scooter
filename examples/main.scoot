@@ -1,6 +1,17 @@
 struct BarFoo {
     one: i32,
-    two: bool
+    two: i32
+}
+
+impl BarFoo {
+    fn some(self) -> () {
+
+    }
+}
+
+fn thing() -> BarFoo {
+    let bf: BarFoo = BarFoo { one: 5, two: 5 };
+    return bf;
 }
 
 fn main() -> i32 {

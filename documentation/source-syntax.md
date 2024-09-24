@@ -6,6 +6,12 @@
 
  item-struct ::= "struct" ident fields
 
+   item-impl ::= "impl" ident "{" { impl-item } "}"
+
+   impl-item ::= impl-item-fn
+
+impl-item-fn ::= "fn" ident "(" fn-params ")" -> ty block
+
       fields ::= fields-named | fields-pos
 
 fields-named ::= "{" { field-named "," } "}"
