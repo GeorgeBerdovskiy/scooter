@@ -11,6 +11,7 @@ pub struct File {
 #[derive(Debug)]
 pub enum Item {
     Fn(ItemFn),
+    Struct(ItemStruct),
 }
 
 /// Represents a function item (declaration).
@@ -41,6 +42,60 @@ pub struct ItemFn {
     pub body: Block,
 
     /// The function span.
+    pub span: Span,
+}
+
+/// Represents a struct item (declaration).
+#[derive(Debug)]
+pub struct ItemStruct {
+    // The `struct` keyword
+    pub kw: Token,
+
+    /// The struct identifier.
+    pub ident: Ident,
+
+    /// The struct fields.
+    pub fields: Fields,
+
+    /// The span of the entire struct.
+    pub span: Span,
+}
+
+/// Represents either a list of named fields, or a list of positional fields.
+#[derive(Debug)]
+pub enum Fields {
+    Named(FieldsNamed),
+}
+
+/// Represents a list of named fields.
+#[derive(Debug)]
+pub struct FieldsNamed {
+    /// The left curly brace.
+    pub lb: Token,
+
+    /// The list of fields.
+    pub fields: Vec<FieldNamed>,
+
+    /// The right curly brace.
+    pub rb: Token,
+
+    /// The span of the entire fields block.
+    pub span: Span,
+}
+
+//// Represents a single named field.
+#[derive(Debug)]
+pub struct FieldNamed {
+    /// The name of this field.
+    pub ident: Ident,
+
+    /// The ':' symbol.
+    pub colon: Token,
+
+    /// The type of this field.
+    pub ty: Ty,
+
+    /// The span of the entire field.
     pub span: Span,
 }
 

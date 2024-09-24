@@ -26,6 +26,7 @@ impl Token {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     KwFn,          // "fn"
+    KwStruct,      // "struct"
     KwLet,         // "let"
     KwRet,         // "return"
     Ident(String), // "foo", "bar", "baz"
@@ -48,6 +49,7 @@ impl Display for TokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::KwFn => write!(f, "'fn'"),
+            Self::KwStruct => write!(f, "'struct'"),
             Self::KwLet => write!(f, "'let'"),
             Self::KwRet => write!(f, "'return'"),
             Self::Ident(str) => write!(f, "identifier '{str}'"),

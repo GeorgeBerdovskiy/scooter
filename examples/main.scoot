@@ -1,11 +1,6 @@
-fn bar(z: i32, h: i32) -> i32 {
-    return 1;
-}
-
-fn foo(y: i32) -> i32 {
-    let a: i32 = 5 + 6;
-    let b: i32 = a + 7 * 8;
-    return b + a + bar(b, 2);
+struct BarFoo {
+    one: i32,
+    two: bool
 }
 
 fn main() -> i32 {

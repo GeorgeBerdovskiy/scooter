@@ -1,34 +1,46 @@
 
 ```
-  program ::= item-fn { item-fn }
+     program ::= item-fn { item-fn }
 
-  item-fn ::= "fn" ident "(" fn-params ")" -> ty block
+     item-fn ::= "fn" ident "(" fn-params ")" -> ty block
 
-fn-params ::= { fn-param "," }
+ item-struct ::= "struct" ident fields
 
- fn-param ::= ident ":" ty
+      fields ::= fields-named | fields-pos
 
-       ty ::= "i32"
+fields-named ::= "{" { field-named "," } "}"
 
-    block ::= "{" stmt ";" { stmt ";" } "}"
+ field-named ::= ident ":" ty
 
-    stmt  ::= local | expr
+  fields-pos ::= "(" {field-pos ","} ")"
 
-     expr ::= call-fn | term { "+" term }
+   field-pos ::= ty
 
-    local ::= "let" ident ":" ty "=" expr
+  fn-params ::= { fn-param "," }
 
-  call-fn ::= ident "(" args ")"
+   fn-param ::= ident ":" ty
 
-     args ::= { expr "," }
+         ty ::= "i32"
 
-     term ::= factor { "*" factor }
+      block ::= "{" stmt ";" { stmt ";" } "}"
 
-   factor ::= ident | lit-int | "(" expr ")"
+      stmt  ::= local | expr
 
-    ident ::= (letter | "_") { letter | digit }
+       expr ::= call-fn | term { "+" term }
 
-   letter ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z"
+      local ::= "let" ident ":" ty "=" expr
 
-    digit ::= "0" | "1" | "2" | ... | "9"
+    call-fn ::= ident "(" args ")"
+
+       args ::= { expr "," }
+
+       term ::= factor { "*" factor }
+
+     factor ::= ident | lit-int | "(" expr ")"
+
+      ident ::= (letter | "_") { letter | digit }
+
+     letter ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z"
+
+      digit ::= "0" | "1" | "2" | ... | "9"
 ```

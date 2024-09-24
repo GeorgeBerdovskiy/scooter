@@ -1,6 +1,7 @@
 use crate::ast::{
-    ArgList, BinaryOp, Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Item, ItemFn,
-    LitNum, Local, OpKind, Param, ParamList, Return, Stmt, Ty,
+    ArgList, BinaryOp, Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, FieldNamed, Fields,
+    FieldsNamed, File, Ident, Item, ItemFn, ItemStruct, LitNum, Local, OpKind, Param, ParamList,
+    Return, Stmt, Ty,
 };
 use crate::lexer::{Token, TokenKind};
 use crate::shared::Span;
@@ -58,14 +59,67 @@ impl<'a> Parser<'a> {
     pub fn parse_item(&mut self) -> ParseResult<Item> {
         let kind = self.current_kind();
 
-        if kind == &TokenKind::KwFn {
-            self.parse_item_fn()
-        } else {
-            Err(ParseError {
-                reason: format!("Expected 'fn' or 'mod', found '{kind}'"),
+        match kind {
+            TokenKind::KwFn => self.parse_item_fn(),
+            TokenKind::KwStruct => self.parse_item_struct(),
+            _ => Err(ParseError {
+                reason: format!("Expected 'fn' or 'mod', found {kind}"),
                 span: Some(self.end()),
-            })
+            }),
         }
+    }
+
+    /// Parse a struct declaration.
+    pub fn parse_item_struct(&mut self) -> ParseResult<Item> {
+        self.start();
+
+        Ok(Item::Struct(ItemStruct {
+            kw: self.expect(TokenKind::KwStruct)?,
+            ident: self.parse_ident()?,
+            fields: self.parse_fields()?,
+            span: self.end(),
+        }))
+    }
+
+    fn parse_fields(&mut self) -> ParseResult<Fields> {
+        if self.current_kind() == &TokenKind::LBrace {
+            self.parse_fields_named()
+        } else {
+            todo!()
+        }
+    }
+
+    fn parse_fields_named(&mut self) -> ParseResult<Fields> {
+        self.start();
+
+        let lb = self.expect(TokenKind::LBrace)?;
+
+        let mut fields = Vec::new();
+
+        while self.current_kind() != &TokenKind::RBrace {
+            fields.push(self.parse_field_named()?);
+
+            if self.current_kind() != &TokenKind::RBrace {
+                self.expect(TokenKind::Comma)?;
+            }
+        }
+
+        Ok(Fields::Named(FieldsNamed {
+            lb,
+            fields,
+            rb: self.expect(TokenKind::RBrace)?,
+            span: self.end(),
+        }))
+    }
+
+    fn parse_field_named(&mut self) -> ParseResult<FieldNamed> {
+        self.start();
+        Ok(FieldNamed {
+            ident: self.parse_ident()?,
+            colon: self.expect(TokenKind::Colon)?,
+            ty: self.parse_ty()?,
+            span: self.end(),
+        })
     }
 
     /// Parse a function declaration.

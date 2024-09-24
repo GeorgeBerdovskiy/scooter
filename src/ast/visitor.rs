@@ -2,8 +2,8 @@
 use paste::paste;
 
 use super::{
-    Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, File, Ident, Item, ItemFn, LitNum, Local,
-    Return, Stmt, Ty,
+    Block, CallFn, Expr, ExprBin, ExprCall, ExprLit, FieldNamed, Fields, FieldsNamed, File, Ident,
+    Item, ItemFn, ItemStruct, LitNum, Local, Return, Stmt, Ty,
 };
 
 /// This macro generates the `Visitor` trait. Unfortunately, you still have to manually implement each `visit_*` function
@@ -27,6 +27,10 @@ visitor! {
     file: File,
     item: Item,
     item_fn: ItemFn,
+    item_struct: ItemStruct,
+    fields: Fields,
+    fields_named: FieldsNamed,
+    field_named: FieldNamed,
     ident: Ident,
     block: Block,
     stmt: Stmt,
@@ -50,12 +54,35 @@ pub fn visit_file<'a>(visitor: &mut impl Visit<'a>, program: &'a File) {
 pub fn visit_item<'a>(visitor: &mut impl Visit<'a>, item: &'a Item) {
     match item {
         Item::Fn(item_fn) => visitor.visit_item_fn(&item_fn),
+        Item::Struct(item_struct) => visitor.visit_item_struct(item_struct),
     }
 }
 
 pub fn visit_item_fn<'a>(visitor: &mut impl Visit<'a>, item_fn: &'a ItemFn) {
     visitor.visit_ident(&item_fn.ident);
     visitor.visit_block(&item_fn.body);
+}
+
+pub fn visit_item_struct<'a>(visitor: &mut impl Visit<'a>, item_struct: &'a ItemStruct) {
+    visitor.visit_ident(&item_struct.ident);
+    visitor.visit_fields(&item_struct.fields);
+}
+
+pub fn visit_fields<'a>(visitor: &mut impl Visit<'a>, fields: &'a Fields) {
+    match fields {
+        Fields::Named(fields_named) => visitor.visit_fields_named(fields_named),
+    }
+}
+
+pub fn visit_fields_named<'a>(visitor: &mut impl Visit<'a>, fields_named: &'a FieldsNamed) {
+    for field_named in &fields_named.fields {
+        visitor.visit_field_named(field_named);
+    }
+}
+
+pub fn visit_field_named<'a>(visitor: &mut impl Visit<'a>, field_named: &'a FieldNamed) {
+    visitor.visit_ident(&field_named.ident);
+    visitor.visit_ty(&field_named.ty);
 }
 
 pub fn visit_ident<'a>(visitor: &mut impl Visit<'a>, ident: &'a Ident) {

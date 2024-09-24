@@ -67,6 +67,8 @@ fn main() {
         }
     };
 
+    println!("{:#?}", ast);
+
     // Next, let's perform semantic analysis!
     // First, we'll need to collect all exisiting function declarations.
     let mut resolver = Resolver::new(&ast);
@@ -90,9 +92,9 @@ fn main() {
         exit(1);
     }
 
-    // Next, we'll lower the AST to IR and generate a human readable IR file
-    let mut lower = LoweringEngine::new(&ast);
-    let ir = lower.lower();
+    // // Next, we'll lower the AST to IR and generate a human readable IR file
+    // let mut lower = LoweringEngine::new(&ast);
+    // let ir = lower.lower();
 
-    let _ = ir.human_readable("./out.ir");
+    // let _ = ir.human_readable("./out.ir");
 }
